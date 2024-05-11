@@ -3,9 +3,14 @@ package main
 import (
 	"os"
 
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/ignite-hq/cli/ignite/pkg/cosmoscmd"
 	"mychain/app"
+	"mychain/cmd/mychaind/cmd"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+
+	// "github.com/tendermint/starport/starport/pkg/cosmoscmd"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	// "github.com/tendermint/spm/cosmoscmd"
+	"github.com/tendermint/starport/starport/pkg/cosmoscmd"
 )
 
 func main() {
@@ -17,7 +22,19 @@ func main() {
 		app.ModuleBasics,
 		app.New,
 		// this line is used by starport scaffolding # root/arguments
+		// cmdOptions...,
 	)
+
+	//testnet cmd
+	rootCmd.AddCommand(
+		cmd.TestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+	)
+
+	// generate genesis vesting accounts cmd
+	rootCmd.AddCommand(
+		cmd.AddGenesisVestingAccountCmd(app.DefaultNodeHome),
+	)
+
 	if err := svrcmd.Execute(rootCmd, app.DefaultNodeHome); err != nil {
 		os.Exit(1)
 	}
