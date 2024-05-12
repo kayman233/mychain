@@ -1,16 +1,68 @@
 accounts:
-  - name: alice
-    coins: ["20000token", "200000000stake"]
-  - name: bob
-    coins: ["10000token", "100000000stake"]
+  - name: Cantho
+    coins: ["50000000000000uabs"]
+  - name: Vinh
+    coins: ["50000000000000uabs"]
+  - name: Hagiang
+    coins: ["50000000000000uabs"]
+  - name: Thaibinh
+    coins: ["50000000000000uabs"]
 validator:
-  name: alice
-  staked: "100000000stake"
+  name: Cantho
+  staked: "10000000000uabs"
 client:
   openapi:
     path: "docs/static/openapi.yml"
-  vuex:
-    path: "vue/src/store"
-faucet:
-  name: bob
-  coins: ["5token", "100000stake"]
+init:
+  app:
+    minimum-gas-prices: "0.001uabs"
+genesis:
+  chain_id: "mychain"
+  app_state:
+    aura:
+      params:
+        max_supply: "1000000000000000"
+    crisis:
+      constant_fee:
+        denom: uabs
+    gov:
+      deposit_params:
+        min_deposit: [
+         {
+           "denom": "uabs",
+           "amount": "1000000"
+         }
+        ]
+        max_deposit_period: "172800s"
+      voting_params:
+        voting_period: "172800s"
+    mint:
+      params:
+        mint_denom: "uabs"
+        inflation_rate_change: "0.080000000000000000"
+        inflation_max: "0.120000000000000000"
+        inflation_min: "0.040000000000000000"
+        blocks_per_year: "5373084"
+    staking:
+      params:
+        bond_denom: "uabs"
+        unbonding_time: "86400s"
+        max_validators: 5
+    slashing:
+      params:
+        signed_blocks_window: "1000"
+        downtime_jail_duration: "600s"
+    smartaccount:
+      params:
+        whitelist_code_id: [
+          {
+              "code_id": "1",
+              "status": true    
+          },
+          {
+              "code_id": "2",
+              "status": true
+          }
+        ]
+        max_gas_execute: 2000000
+      smart_account_id: 0

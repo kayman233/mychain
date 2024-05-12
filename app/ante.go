@@ -9,7 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	ibcante "github.com/cosmos/ibc-go/v4/modules/core/ante"
 	keeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-
+	smartaccountkeeper "mychain/x/smartaccount/keeper"
+	smartaccount "mychain/x/smartaccount"
 	// stargazeante "github.com/public-awesome/stargaze/v4/internal/ante"
 )
 
@@ -18,6 +19,7 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 	WasmKeeper         wasmkeeper.Keeper
+	SmartAccountKeeper smartaccountkeeper.Keeper
 	IBCKeeper          *keeper.Keeper
 	WasmConfig         *wasmTypes.WasmConfig
 	TXCounterStoreKey  sdk.StoreKey
@@ -67,12 +69,14 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
-		ante.NewSetPubKeyDecorator(options.AccountKeeper),
+		// ante.NewSetPubKeyDecorator(options.AccountKeeper),
+		smartaccount.NewSetPubKeyDecorator(options.SmartAccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 
 		// new ante for account abstraction
+		smartaccount.NewSmartAccountDecorator(options.SmartAccountKeeper),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewAnteDecorator(options.IBCKeeper),
 	}
