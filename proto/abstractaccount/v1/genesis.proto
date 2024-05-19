@@ -1,0 +1,11 @@
+syntax = "proto3";
+package abstractaccount.v1;
+
+import "abstractaccount/v1/params.proto";
+
+option go_package = "mychain/x/abstractaccount/types";
+
+message GenesisState {
+  Params params          = 1;
+  uint64 next_account_id = 2;
+}

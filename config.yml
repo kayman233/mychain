@@ -1,68 +1,89 @@
+version: 1
 accounts:
-  - name: Cantho
-    coins: ["50000000000000uabs"]
-  - name: Vinh
-    coins: ["50000000000000uabs"]
-  - name: Hagiang
-    coins: ["50000000000000uabs"]
-  - name: Thaibinh
-    coins: ["50000000000000uabs"]
-validator:
-  name: Cantho
-  staked: "10000000000uabs"
+- name: Cantho
+  coins:
+  - 50000000000000stake
+  mnemonic: "satisfy adjust timber high purchase tuition stool faith fine install that you unaware feed domain license impose boss human eager hat rent enjoy dawn"
+- name: Vinh
+  coins:
+  - 50000000000000stake
+- name: Hagiang
+  coins:
+  - 50000000000000stake
+- name: Thaibinh
+  coins:
+  - 50000000000000stake
+- name: user1
+  coins: ["1000000000000stake"]
+  mnemonic: "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius"
+- name: user2
+  coins: ["1000000000000stake"]
+  mnemonic: "quality vacuum heart guard buzz spike sight swarm shove special gym robust assume sudden deposit grid alcohol choice devote leader tilt noodle tide penalty"
+- name: user3
+  coins: ["1000000000000stake"]
+  mnemonic: "symbol force gallery make bulk round subway violin worry mixture penalty kingdom boring survey tool fringe patrol sausage hard admit remember broken alien absorb"
+- name: user4
+  coins: ["1000000000000stake"]
+  mnemonic: "bounce success option birth apple portion aunt rural episode solution hockey pencil lend session cause hedgehog slender journey system canvas decorate razor catch empty"
+- name: user5
+  coins: ["1000000000000stake"]
+  mnemonic: " second render cat sing soup reward cluster island bench diet lumber grocery repeat balcony perfect diesel stumble piano distance caught occur example ozone loyal"
+- name: user6
+  coins: ["1000000000000stake"]
+  mnemonic: "spatial forest elevator battle also spoon fun skirt flight initial nasty transfer glory palm drama gossip remove fan joke shove label dune debate quick"
+- name: user7
+  coins: ["1000000000000stake"]
+  mnemonic: "noble width taxi input there patrol clown public spell aunt wish punch moment will misery eight excess arena pen turtle minimum grain vague inmate"
+- name: user8
+  coins: ["1000000000000stake"]
+  mnemonic: "cream sport mango believe inhale text fish rely elegant below earth april wall rug ritual blossom cherry detail length blind digital proof identify ride"
+- name: user9
+  coins: ["1000000000000stake"]
+  mnemonic: "index light average senior silent limit usual local involve delay update rack cause inmate wall render magnet common feature laundry exact casual resource hundred"
+- name: user10
+  coins: ["1000000000000stake"]
+  mnemonic: "prefer forget visit mistake mixture feel eyebrow autumn shop pair address airport diesel street pass vague innocent poem method awful require hurry unhappy shoulder"
+faucet:
+  name: null
+  coins: []
+  host: 0.0.0.0:4500
 client:
   openapi:
-    path: "docs/static/openapi.yml"
-init:
-  app:
-    minimum-gas-prices: "0.001uabs"
+    path: docs/static/openapi.yml
 genesis:
-  chain_id: "mychain"
   app_state:
-    aura:
-      params:
-        max_supply: "1000000000000000"
     crisis:
       constant_fee:
-        denom: uabs
+        denom: stake
     gov:
-      deposit_params:
+      params:
+        max_deposit_period: 172800s
         min_deposit: [
          {
-           "denom": "uabs",
-           "amount": "1000000"
+           "denom": "stake",
+           "amount": "10000000"
          }
         ]
-        max_deposit_period: "172800s"
-      voting_params:
-        voting_period: "172800s"
+        voting_period: 172800s
     mint:
       params:
-        mint_denom: "uabs"
-        inflation_rate_change: "0.080000000000000000"
+        blocks_per_year: "5373084"
         inflation_max: "0.120000000000000000"
         inflation_min: "0.040000000000000000"
-        blocks_per_year: "5373084"
-    staking:
-      params:
-        bond_denom: "uabs"
-        unbonding_time: "86400s"
-        max_validators: 5
+        inflation_rate_change: "0.080000000000000000"
+        mint_denom: stake
     slashing:
       params:
+        downtime_jail_duration: 600s
         signed_blocks_window: "1000"
-        downtime_jail_duration: "600s"
-    smartaccount:
+    staking:
       params:
-        whitelist_code_id: [
-          {
-              "code_id": "1",
-              "status": true    
-          },
-          {
-              "code_id": "2",
-              "status": true
-          }
-        ]
-        max_gas_execute: 2000000
-      smart_account_id: 0
+        bond_denom: stake
+        max_validators: 5
+        unbonding_time: 86400s
+  chain_id: aura-testnet
+validators:
+- name: Cantho
+  bonded: 10000000000stake
+  app:
+    minimum-gas-prices: 0.001stake
