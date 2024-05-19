@@ -1,0 +1,22 @@
+[package]
+name          = "account-updatable"
+description   = "An abstract account that allows rotating the pubkey associated with it"
+version       = { workspace = true }
+edition       = { workspace = true }
+rust-version  = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
+# use library feature to disable all instantiate/execute/query exports
+library = []
+
+[dependencies]
+absacc           = { path = "../../packages/absacc" }
+account-base     = { path = "../base", features = ["library"] }
+cosmwasm-schema  = { workspace = true }
+cosmwasm-std     = { workspace = true }
+cw2              = { workspace = true }
