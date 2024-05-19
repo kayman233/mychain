@@ -1,0 +1,51 @@
+### To run local chain:
+
+```
+make install
+
+BINARY=mychaind
+
+MNEMONIC_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
+MNEMONIC_2="friend excite rough reopen cover wheel spoon convince island path clean monkey play snow number walnut pull lock shoot hurry dream divide concert discover"
+MNEMONIC_3="fuel obscure melt april direct second usual hair leave hobby beef bacon solid drum used law mercy worry fat super must ritual bring faculty"
+GENESIS_COINS=10000000000000stake,10000000000000uatom
+
+echo $MNEMONIC_1 | $BINARY keys add validator --recover --keyring-backend=test
+echo $MNEMONIC_2 | $BINARY keys add user1 --recover --keyring-backend=test
+echo $MNEMONIC_3 | $BINARY keys add user2 --recover --keyring-backend=test
+
+export CHAIN_ID=mychain
+
+$BINARY init test --chain-id $CHAIN_ID
+
+$BINARY add-genesis-account $($BINARY keys show validator --keyring-backend test -a) $GENESIS_COINS
+$BINARY add-genesis-account $($BINARY keys show user1 --keyring-backend test -a) $GENESIS_COINS
+$BINARY add-genesis-account $($BINARY keys show user2 --keyring-backend test -a) $GENESIS_COINS
+
+$BINARY gentx validator 100000000stake --chain-id $CHAIN_ID --keyring-backend test
+
+$BINARY collect-gentxs
+
+$BINARY start
+```
+
+### Local keys:
+
+```
+- address: cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v
+  name: validator
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AvzwBOriY8sVwEXrXf1gXanhT9imlfWeUWLQ8pMxrRsg"}'
+  type: local
+
+
+- address: cosmos1mzgucqnfr2l8cj5apvdpllhzt4zeuh2cshz5xu
+  name: user1
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AuXpdpSX+8fH7lerOczty2EgGFd9MMoJADPcZ7pdaLir"}'
+  type: local
+
+
+- address: cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
+  name: user2
+  pubkey: '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AuFUt9g9uckLNgVlO7BCzqUCOL8OUg+zIgeHTxxeG4Fy"}'
+  type: local
+```
