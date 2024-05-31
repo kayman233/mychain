@@ -57,7 +57,6 @@ pub fn execute(
         ExecuteMsg::UpdatePubkey {
             new_pubkey,
         } => execute::update_pubkey(deps.storage, &info.sender, &env.contract.address, &new_pubkey),
-        // ExecuteMsg::UpdateCount {} => execute::update_count(deps.storage, &info.sender, &env.contract.address),
         ExecuteMsg::Recover {new_pubkey} => execute::recover(deps.storage, &info.sender, &new_pubkey),
         ExecuteMsg::Revoke {} => execute::revoke(deps.storage, &info.sender),
     }
