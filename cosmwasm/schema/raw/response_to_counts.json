@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Array_of_CountsResponse",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/CountsResponse"
+  },
+  "definitions": {
+    "CountsResponse": {
+      "type": "object",
+      "required": [
+        "pubkey",
+        "votes"
+      ],
+      "properties": {
+        "pubkey": {
+          "type": "string"
+        },
+        "votes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
