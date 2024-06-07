@@ -1,0 +1,54 @@
+{
+  "name": "aa",
+  "version": "0.0.1",
+  "author": "Ivan Kudryavtsev <vanyakudr007@mail.ru>",
+  "description": "aa",
+  "main": "index.js",
+  "module": "esm/index.js",
+  "types": "index.d.ts",
+  "homepage": "https://github.com/kayman233/aa",
+  "license": "SEE LICENSE IN LICENSE",
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kayman233/aa"
+  },
+  "bugs": {
+    "url": "https://github.com/kayman233/aa/issues"
+  },
+  "scripts": {
+    "copy": "copyfiles -f ../../LICENSE README.md package.json dist",
+    "clean": "rimraf dist/**",
+    "prepare": "npm run build",
+    "codegen": "ts-node scripts/codegen.ts",
+    "build": "npm run clean; tsc; tsc -p tsconfig.esm.json; npm run copy",
+    "lint": "eslint . --fix",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "@cosmology/telescope": "^1.0.1",
+    "@protobufs/akash": "^0.1.0",
+    "@protobufs/amino": "^0.0.11",
+    "@protobufs/cosmos": "^0.1.0",
+    "@protobufs/cosmos_proto": "^0.0.10",
+    "@protobufs/cosmwasm": "^0.1.1",
+    "@protobufs/ibc": "^0.1.0",
+    "@protobufs/juno": "^0.1.0",
+    "@protobufs/osmosis": "^0.4.0",
+    "@protobufs/regen": "^0.1.0",
+    "@protobufs/stargaze": "^0.1.0",
+    "@protobufs/tendermint": "^0.0.10"
+  },
+  "dependencies": {
+    "@cosmjs/encoding": "0.32.3",
+    "@cosmjs/math": "0.32.3",
+    "@cosmjs/amino": "0.32.3",
+    "@cosmjs/proto-signing": "0.32.3",
+    "@cosmjs/stargate": "0.32.3"
+  },
+  "keywords": []
+}
