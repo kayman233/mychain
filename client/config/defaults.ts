@@ -2,6 +2,7 @@ import { assets } from 'chain-registry';
 import { AssetList, Asset } from '@chain-registry/types';
 
 export const defaultChainName = 'gmrollup';
+export const defaultChainID = 'mychain';
 export const defaultCA = 'cosmos1mssg28kaflv6g25phn7ncv25ygtky0najzqvjl0cay8fg95ry3ls5ny649';
 
 export const getChainAssets = (chainName: string = defaultChainName) => {

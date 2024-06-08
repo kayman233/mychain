@@ -1,12 +1,27 @@
 import { useChain } from '@cosmos-kit/react';
-import { defaultChainName } from '../config';
-import { SigningStargateClient, StargateClient } from "@cosmjs/stargate"
+import { defaultCA, defaultChainID, defaultChainName } from '../config';
+import { SigningStargateClient, SigningStargateClientOptions, StargateClient } from "@cosmjs/stargate"
 import { useCallback, useEffect, useState } from 'react';
+import { accountFromAny } from '../config/accounts';
+import { TxRaw, Tx } from "cosmjs-types/cosmos/tx/v1beta1/tx";
+
+import {
+    EncodeObject,
+    encodePubkey,
+    GeneratedType,
+    isOfflineDirectSigner,
+    makeAuthInfoBytes,
+    makeSignDoc,
+    OfflineSigner,
+    Registry,
+    TxBodyEncodeObject,
+  } from "@cosmjs/proto-signing";
+import { sendTx } from './send';
 
 const rpc = "127.0.0.1:26657"
 
 export function useBalances(amount: string | undefined, recipient: string | undefined) {
-    const { address, getStargateClient, getSigningStargateClient, signAndBroadcast } = useChain(defaultChainName);
+    const { address, wallet, getStargateClient, getSigningStargateClient, signAndBroadcast, getOfflineSigner } = useChain(defaultChainName);
 
     const [clientCosmos, setClientCosmos] = useState<StargateClient | null>(null); 
     const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(null); 
@@ -23,19 +38,22 @@ export function useBalances(amount: string | undefined, recipient: string | unde
             }
             setClientCosmos(client);
         })
-    }, [address, getStargateClient]);
+    }, [address]);
     // cosmos1j0hxmkg349vnx6wfnxwg85uu9fkpzvtyet7zty
     useEffect(() => {
         if (!address) {
             return;
         }
-        getSigningStargateClient().then((client) => {
+        const options: SigningStargateClientOptions = { accountParser: accountFromAny };
+
+        SigningStargateClient.connectWithSigner(rpc, getOfflineSigner(), options).then((client) => {
               if (!client) {
                   return;
               }
+            //   client.connectWithSigner()
               setSigningClientCosmos(client);
           })
-      }, [address, getSigningStargateClient]);
+      }, [address]);
 
     // "auth_info": {
     //     "signer_infos": [],
@@ -58,6 +76,16 @@ export function useBalances(amount: string | undefined, recipient: string | unde
         if (!amount || !recipient || !address || !signingClientCosmos) {
           return;
         }
+
+        // const offlineSigner = window.keplr.getOfflineSigner(keplrChainId);
+
+        // const accounts = await offlineSigner.getAccounts();
+
+        // const cosmJS = await SigningStargateClient.connectWithSigner(
+        //     'https://rpc-cosmoshub.keplr.app',
+        //     offlineSigner,
+        // );
+
     
         const message = [
           {
@@ -82,5 +110,71 @@ export function useBalances(amount: string | undefined, recipient: string | unde
         setTxHash(result.transactionHash);
     }, [signAndBroadcast, address, amount, recipient, setTxHash, signingClientCosmos]);
 
-    return { balance: balance ?? undefined, txHash, handleSend };
+    const handleSendAA = useCallback(async () => {    
+        if (!amount || !recipient || !address || !signingClientCosmos || !clientCosmos) {
+          return;
+        }
+
+        const acc = await signingClientCosmos.getAccount(defaultCA);
+
+        if (!acc) {
+            console.log('no acc');
+            return;
+        } else {
+            console.log('acc', acc);
+        }
+    
+        const message = [
+          {
+            typeUrl: '/cosmos.bank.v1beta1.MsgSend',
+            value: {
+              fromAddress: defaultCA,
+              toAddress: recipient,
+              amount: [
+                {
+                  amount: String(amount),
+                  denom: 'stake',
+                },
+              ],
+            },
+          },
+        ];
+
+        console.log("isOffline", signingClientCosmos);
+
+        const result = await signingClientCosmos.sign(address, message, { gas: "200000", amount: []}, "", {
+            accountNumber: acc.accountNumber,
+            sequence: acc.sequence,
+            chainId: defaultChainID,
+        });
+
+        // const result = await signingClientCosmos.signAndBroadcast(address, message, { gas: "200000", amount: []});
+        // await signAndBroadcast(message, { gas: "2000000", amount: []} );
+    
+        console.log("result", result);
+
+        console.log("result json", TxRaw.toJSON(result));
+
+        // console.log("authInfoBytes", Buffer.from(result.authInfoBytes).toString('base64'));
+        // console.log("bodyBytes", Buffer.from(result.bodyBytes).toString('base64'));
+        // console.log("signatures", Buffer.from(result.signatures[0]).toString('base64'));
+
+        const mytx = Tx.fromJSON(sendTx);
+
+        console.log("mytx", mytx);
+
+        console.log("mytx json", Tx.toJSON(mytx));
+
+        const myTxBytes = Tx.encode(mytx).finish();
+
+        console.log("myTx str? ",Buffer.from(myTxBytes).toString('base64'))
+
+        // const br = await signingClientCosmos.broadcastTx(txBytes);
+
+        // console.log("res br", br);
+
+        // setTxHash(br.transactionHash);
+    }, [signAndBroadcast, address, amount, recipient, setTxHash, clientCosmos, signingClientCosmos, defaultCA]);
+
+    return { balance: balance ?? undefined, txHash, handleSend, handleSendAA };
 }

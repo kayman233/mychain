@@ -34,7 +34,7 @@ export function useAA(newPubkey: string | undefined) {
             const newClient = new SocialRecoveryQueryClient(client, defaultCA);
             setSocialClient(newClient);
         })
-    }, [address, defaultCA, getCosmWasmClient]);
+    }, [address, defaultCA]);
 
     useEffect(() => {
         if (!address) {
@@ -47,7 +47,7 @@ export function useAA(newPubkey: string | undefined) {
             const newClient = new SocialRecoveryClient(client, address, defaultCA);
             setSigningClient(newClient);
         })
-    }, [address, defaultCA, getSigningCosmWasmClient]);
+    }, [address, defaultCA]);
 
     useEffect(() => {
         if (!address) {

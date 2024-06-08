@@ -26,10 +26,12 @@ import { useChain } from '@cosmos-kit/react';
 import { SigningStargateClient } from '@cosmjs/stargate';
 import { useEffect, useState } from 'react';
 import { useAA } from '../hooks/useAA';
+import axios from 'axios';
 
 export default function Home() {
   const { colorMode, toggleColorMode } = useColorMode();
-  const {  } = useChain(defaultChainName);
+  const { username } = useChain(defaultChainName);
+  const [result, setResult] = useState('');
 
   const [recipient, setRecipient] = useState<string | undefined>(undefined); 
   const [amount, setAmount] = useState<string | undefined>(undefined);
@@ -50,6 +52,34 @@ export default function Home() {
   const handleNewkey = (event: any) => {
     setNewkey(event.target.value);
   }
+
+  const handleSignRequest = () => {
+    console.log("handle", defaultCA, recipient, amount, username);
+    if (!defaultCA || !recipient || !amount || !username) {
+      console.log("not enough");
+      return;
+    }
+    const data = {
+      sender: defaultCA,
+      recipient: recipient,
+      denom: "stake",
+      amount: amount,
+      user: username
+    };
+    const headers = {
+      headers: {
+        "Content-Type": "application/json",
+      }
+    };
+    axios.post('http://localhost:8080/sign', data, headers)
+    .then(response => {
+      setResult(response.data.result);
+    })
+    .catch(error => {
+      // Handle error
+      console.error('Error signing and broadcasting transaction:', error);
+    });
+  };
 
   return (
     <Container maxW="5xl" py={10}>
@@ -86,7 +116,11 @@ export default function Home() {
       <Input placeholder='Address' value={recipient} onChange={handleRecipient} />
       <Input placeholder='Amount' value={amount} onChange={handleAmount} />
       <Button onClick={() => handleSend()}>Send tokens!</Button>
+      <Divider />
+      <Button onClick={() => handleSignRequest()}>Send tokens from AA!</Button>
       <p>txHash: {txHash}</p>
+      <p>res from AA: {result}</p>
+      <Divider />
       <p>pubkey: {userPubkey}</p>
       <Divider />
       <Input placeholder='New Pubkey' value={newkey} onChange={handleNewkey} />
