@@ -3,6 +3,6 @@
 
 ## Get started
 
-To run local chain use [localdev manual](./localdev.md)
+To run local chain use [localdev manual](./docs/localdev.md)
 
-To compile, upload and test smart accounts use [run contract manual](./run-contracts.md)
+To compile, upload and test smart accounts use [run contract manual](./docs/run-contracts.md)

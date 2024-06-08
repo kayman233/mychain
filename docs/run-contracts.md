@@ -49,7 +49,7 @@ mychaind q tx <insert_txhash>
 ```
 In last attributes(before raw_log), key: contract_addr is the address. To export it:
 ```
-export ACCOUNT_ADDR=<contract_addr>
+export ACCOUNT_ADDR=cosmos1mssg28kaflv6g25phn7ncv25ygtky0najzqvjl0cay8fg95ry3ls5ny649
 ```
 
 Also change address in testing/*.json files
