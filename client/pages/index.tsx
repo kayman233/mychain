@@ -18,68 +18,29 @@ import { BsFillMoonStarsFill, BsFillSunFill } from 'react-icons/bs';
 import { FaHome } from "react-icons/fa";
 import {
   WalletSection,
-  StakingSection,
 } from '../components';
-import { defaultCA, defaultChainName } from '../config';
+import { defaultChainName } from '../config';
 import { useBalances } from '../hooks/useBalances';
 import { useChain } from '@cosmos-kit/react';
-import { SigningStargateClient } from '@cosmjs/stargate';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAA } from '../hooks/useAA';
-import axios from 'axios';
+import { useCreateAA } from '../hooks/useCreateAA';
+
 
 export default function Home() {
   const { colorMode, toggleColorMode } = useColorMode();
-  const { username } = useChain(defaultChainName);
-  const [result, setResult] = useState('');
 
-  const [recipient, setRecipient] = useState<string | undefined>(undefined); 
-  const [amount, setAmount] = useState<string | undefined>(undefined);
-  const [newkey, setNewkey] = useState<string | undefined>(undefined);  
+  const [recipient, setRecipient] = useState<string | undefined>(''); 
+  const [amount, setAmount] = useState<string | undefined>('');
+  const [newkey, setNewkey] = useState<string | undefined>('');
 
-  const {balance, txHash, handleSend} = useBalances(amount, recipient);
+  const [newFunds, setNewFunds] = useState<string | undefined>(''); 
+  const [newThreshold, setNewThreshold] = useState<string | undefined>(''); 
+  const [newGuardians, setNewGuardians] = useState<string[] | undefined>([]);
 
-  const {pubkey, userPubkey, threshold, guardians, counts, votes, txHash: txHashA, handleRecover } = useAA(newkey);
-
-  const handleAmount = (event: any) => {
-    setAmount(event.target.value);
-  }
-
-  const handleRecipient = (event: any) => {
-    setRecipient(event.target.value);
-  }
-
-  const handleNewkey = (event: any) => {
-    setNewkey(event.target.value);
-  }
-
-  const handleSignRequest = () => {
-    console.log("handle", defaultCA, recipient, amount, username);
-    if (!defaultCA || !recipient || !amount || !username) {
-      console.log("not enough");
-      return;
-    }
-    const data = {
-      sender: defaultCA,
-      recipient: recipient,
-      denom: "stake",
-      amount: amount,
-      user: username
-    };
-    const headers = {
-      headers: {
-        "Content-Type": "application/json",
-      }
-    };
-    axios.post('http://localhost:8080/sign', data, headers)
-    .then(response => {
-      setResult(response.data.result);
-    })
-    .catch(error => {
-      // Handle error
-      console.error('Error signing and broadcasting transaction:', error);
-    });
-  };
+  const { handleCreateAA, contractAddress } = useCreateAA(newFunds, newGuardians, Number(newThreshold))
+  const { pubkey, isGuardian, userPubkey, threshold, guardians, counts, votes, txHash: txHashA, contractAddressLocal, handleRecover, handleRevoke } = useAA(newkey, contractAddress);
+  const { balance, txHash, result, accountBalance, handleSend, handleSendAA } = useBalances(amount, recipient, contractAddressLocal);
 
   return (
     <Container maxW="5xl" py={10}>
@@ -100,38 +61,33 @@ export default function Home() {
           />
         </Button>
       </Flex>
-      {/* <Box textAlign="center">
-        <Heading
-          as="h1"
-          fontSize={{ base: '3xl', sm: '4xl', md: '5xl' }}
-          fontWeight="extrabold"
-          mb={3}
-        >
-        </Heading>
-      </Box> */}
       <WalletSection isMultiChain={false} />
       <p>
         Balance: {balance} stake 
       </p>
-      <Input placeholder='Address' value={recipient} onChange={handleRecipient} />
-      <Input placeholder='Amount' value={amount} onChange={handleAmount} />
+      <Input placeholder='Address' value={recipient} onChange={(e: any) => setRecipient(e.target.value)} />
+      <Input placeholder='Amount' value={amount} onChange={(e: any) => setAmount(e.target.value)} />
       <Button onClick={() => handleSend()}>Send tokens!</Button>
       <Divider />
-      <Button onClick={() => handleSignRequest()}>Send tokens from AA!</Button>
+      <Button onClick={() => handleSendAA()}>Send tokens from AA!</Button>
       <p>txHash: {txHash}</p>
       <p>res from AA: {result}</p>
       <Divider />
       <p>pubkey: {userPubkey}</p>
       <Divider />
-      <Input placeholder='New Pubkey' value={newkey} onChange={handleNewkey} />
+      <Input placeholder='New Pubkey' value={newkey} onChange={(e: any) => setNewkey(e.target.value)} />
       <Button onClick={() => handleRecover()}>Recover!</Button>
+      <Button onClick={() => handleRevoke()}>Revoke!</Button>
       <p>txHash: {txHashA}</p>
-      {/* <StakingSection chainName={defaultChainName} /> */}
+      <p>isGuardian: {isGuardian ? 'yes' : 'no'}</p>
       <Box mb={3}>
         <Divider />
       </Box>
       <p>
-        SmartContract: {defaultCA} 
+        SmartContract: {contractAddressLocal} 
+      </p>
+      <p>
+        Balance: {accountBalance} stake 
       </p>
       <p>
         Owner pubkey: { pubkey } 
@@ -148,6 +104,17 @@ export default function Home() {
       <p>
         Votes: { votes?.map((vote) => `\n ${vote.addr} votes for: ${vote.vote}`) } 
       </p>
+      <Box mb={3}>
+        <Divider />
+      </Box>
+      <p>
+        GenerateNew SA 
+      </p>
+      <Input placeholder='Threshold' value={newThreshold} onChange={(e: any) => setNewThreshold(e.target.value)} />
+      <Input placeholder='Funds' value={newFunds} onChange={(e: any) => setNewFunds(e.target.value)} />
+      <Input placeholder='Guardian' value={newGuardians} onChange={(e: any) => setNewGuardians([e.target.value])} />
+      <Button onClick={() => handleCreateAA()}>Generate!</Button>
+      <p>contractAddress: {contractAddress}</p>
       <Box mb={3}>
         <Divider />
       </Box>

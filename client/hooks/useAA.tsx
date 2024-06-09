@@ -1,53 +1,46 @@
 import { useChain } from '@cosmos-kit/react';
-import { defaultCA, defaultChainName } from '../config';
-// import { SigningStargateClient, StargateClient } from "@cosmjs/stargate"
+import { defaultChainName } from '../config';
 import { useCallback, useEffect, useState } from 'react';
-import { SocialRecoveryClient, SocialRecoveryQueryClient } from '../codegen/SocialRecovery.client';
+import { SocialRecoveryClient } from '../codegen/SocialRecovery.client';
 import { WalletAccount } from '@cosmos-kit/core';
 import { ArrayOfCountsResponse, ArrayOfVotesResponse, GuardiansListResp } from '../codegen/SocialRecovery.types';
 
-// const rpc = "127.0.0.1:26657"
+export function useAA(newPubkey: string | undefined, contractAddress: string | undefined) {
+    const { address, getSigningCosmWasmClient, getAccount } = useChain(defaultChainName);
 
-export function useAA(newPubkey: string | undefined) {
-    const { address, getCosmWasmClient, getSigningCosmWasmClient, getAccount } = useChain(defaultChainName);
-
-    const [socialClient, setSocialClient] = useState<SocialRecoveryQueryClient | null>(null);
     const [signingClient, setSigningClient] = useState<SocialRecoveryClient | null>(null); 
     const [account, setAccount] = useState<WalletAccount | null>(null); 
     const [txHash, setTxHash] = useState<string | undefined>(undefined); 
     const [pubkey, setPubkey] = useState<string | null>(null);
     const [threshold, setThreshold] = useState<number | null>(null);
+    const [isGuardian, setIsGuardian] = useState<boolean>(false);
     const [guardians, setGuardians] = useState<GuardiansListResp | null>(null);
     const [votes, setVotes] = useState<ArrayOfVotesResponse | null>(null);
     const [counts, setCounts] = useState<ArrayOfCountsResponse | null>(null);
+    
+    const [contractAddressLocal, setLocalContractAddress] = useState<string>('');
 
     const [userPubkey, setUserPubkey] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!address) {
-            return;
+        const contractAddressFromLocal = localStorage.getItem('contractAddress');
+        if (contractAddressFromLocal) {
+            setLocalContractAddress(contractAddressFromLocal);
         }
-        getCosmWasmClient().then((client) => {
-            if (!client || !defaultCA) {
-                return;
-            }
-            const newClient = new SocialRecoveryQueryClient(client, defaultCA);
-            setSocialClient(newClient);
-        })
-    }, [address, defaultCA]);
+    }, [contractAddress]);
 
     useEffect(() => {
-        if (!address) {
+        if (!address || contractAddressLocal.length === 0) {
             return;
         }
         getSigningCosmWasmClient().then((client) => {
-            if (!client || !defaultCA) {
+            if (!client) {
                 return;
             }
-            const newClient = new SocialRecoveryClient(client, address, defaultCA);
+            const newClient = new SocialRecoveryClient(client, address, contractAddressLocal);
             setSigningClient(newClient);
         })
-    }, [address, defaultCA]);
+    }, [address]);
 
     useEffect(() => {
         if (!address) {
@@ -62,14 +55,20 @@ export function useAA(newPubkey: string | undefined) {
     }, [address, getAccount]);
 
     useEffect(() => {
-        if (socialClient) {
-            socialClient.pubkey().then((res) => setPubkey(res));
-            socialClient.threshold().then((res) => setThreshold(res));
-            socialClient.guardiansList().then((res) => setGuardians(res));
-            socialClient.counts().then((res) => setCounts(res));
-            socialClient.votes().then((res) => setVotes(res));
+        if (signingClient) {
+            signingClient.pubkey().then((res) => setPubkey(res));
+            signingClient.threshold().then((res) => setThreshold(res));
+            signingClient.guardiansList().then((res) => {
+                setGuardians(res);
+                if (address) {
+                    const foundGuardian = res.guardians.includes(address);
+                    setIsGuardian(foundGuardian);
+                }
+            });
+            signingClient.counts().then((res) => setCounts(res));
+            signingClient.votes().then((res) => setVotes(res));
         }
-    }, [socialClient]);
+    }, [signingClient, address]);
 
     useEffect(() => {
         if (account) {
@@ -79,43 +78,22 @@ export function useAA(newPubkey: string | undefined) {
     }, [account]);
 
     const handleRecover = useCallback(async () => {
-        if (!signingClient) {
+        if (!signingClient || !address || !newPubkey) {
           return;
         }
-    
-        if (!address || !newPubkey) {
-          return;
-        }
-    
-        // const message = [
-        //   {
-        //     typeUrl: '/cosmos.bank.v1beta1.MsgSend',
-        //     value: {
-        //       fromAddress: address,
-        //       toAddress: recipient,
-        //       amount: [
-        //         {
-        //           amount: String(amount),
-        //           denom: 'stake',
-        //         },
-        //       ],
-        //     },
-        //   },
-        // ];
 
         const result = await signingClient.recover({newPubkey}, { gas: "1000000", amount: []});
-        // await signAndBroadcast(message, { gas: "2000000", amount: []} );
-    
-        // console.log(result);
         setTxHash(result.transactionHash);
     }, [address, signingClient, newPubkey]);
 
-    return { pubkey, userPubkey, threshold, guardians, counts, votes, txHash, handleRecover};
-}
+    const handleRevoke = useCallback(async () => {
+        if (!signingClient || !address) {
+          return;
+        }
 
-    // cosmos1j0hxmkg349vnx6wfnxwg85uu9fkpzvtyet7zty
-    // "auth_info": {
-    //     "signer_infos": [],
-    //     "fee": { "amount": [], "gas_limit": "200000", "payer": "", "granter": "" },
-    //     "tip": null
-    //   }
+        const result = await signingClient.revoke({ gas: "1000000", amount: []});
+        setTxHash(result.transactionHash);
+    }, [address, signingClient, newPubkey]);
+
+    return { pubkey, userPubkey, isGuardian, threshold, guardians, counts, votes, txHash, contractAddressLocal, handleRecover, handleRevoke};
+}
