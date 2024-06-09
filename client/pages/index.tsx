@@ -19,9 +19,7 @@ import { FaHome } from "react-icons/fa";
 import {
   WalletSection,
 } from '../components';
-import { defaultChainName } from '../config';
 import { useBalances } from '../hooks/useBalances';
-import { useChain } from '@cosmos-kit/react';
 import { useState } from 'react';
 import { useAA } from '../hooks/useAA';
 import { useCreateAA } from '../hooks/useCreateAA';

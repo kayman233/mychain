@@ -1,24 +1,12 @@
 import { useChain } from '@cosmos-kit/react';
-import { defaultChainName } from '../config';
+import { defaultChainName, defaultRpc } from '../config';
 import { SigningStargateClient } from "@cosmjs/stargate"
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 
-
-import { abstractaccount, getSigningAbstractaccountClient } from '../codegen/codegen';
+import { getSigningAbstractaccountClient } from '../codegen/codegen';
 import { InstantiateMsg } from '../codegen/SocialRecovery.types';
 import { Event } from '../codegen/codegen/tendermint/abci/types';
-
-const rpc = "127.0.0.1:26657"
-
-var JsonToArray = function(json: any): Uint8Array {
-	var str = JSON.stringify(json, null, 0);
-	var ret = new Uint8Array(str.length);
-	for (var i = 0; i < str.length; i++) {
-		ret[i] = str.charCodeAt(i);
-	}
-	return ret
-};
 
 type CreateResponse = {
     result: string
@@ -37,7 +25,7 @@ export function useCreateAA(funds: string | undefined, guardians: string[] | und
             return;
         }
 
-        getSigningAbstractaccountClient({rpcEndpoint: rpc, signer: getOfflineSigner()}).then((client) => {
+        getSigningAbstractaccountClient({rpcEndpoint: defaultRpc, signer: getOfflineSigner()}).then((client) => {
               if (!client) {
                   return;
               }

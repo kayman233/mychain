@@ -1,11 +1,9 @@
 import { useChain } from '@cosmos-kit/react';
-import { defaultChainName } from '../config';
+import { defaultChainName, defaultRpc } from '../config';
 import { SigningStargateClient, SigningStargateClientOptions, StargateClient } from "@cosmjs/stargate"
 import { useCallback, useEffect, useState } from 'react';
 import { accountFromAny } from '../config/accounts';
 import axios from 'axios';
-
-const rpc = "127.0.0.1:26657"
 
 export function useBalances(amount: string | undefined, recipient: string | undefined, localContractAddress: string | undefined) {
     const { address, getStargateClient, signAndBroadcast, getOfflineSigner, username } = useChain(defaultChainName);
@@ -35,7 +33,7 @@ export function useBalances(amount: string | undefined, recipient: string | unde
         }
         const options: SigningStargateClientOptions = { accountParser: accountFromAny };
 
-        SigningStargateClient.connectWithSigner(rpc, getOfflineSigner(), options).then((client) => {
+        SigningStargateClient.connectWithSigner(defaultRpc, getOfflineSigner(), options).then((client) => {
               if (!client) {
                   return;
               }

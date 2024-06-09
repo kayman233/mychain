@@ -2,8 +2,7 @@ import { assets } from 'chain-registry';
 import { AssetList, Asset } from '@chain-registry/types';
 
 export const defaultChainName = 'gmrollup';
-// export const defaultChainID = 'mychain';
-// export const defaultCA = 'cosmos1mssg28kaflv6g25phn7ncv25ygtky0najzqvjl0cay8fg95ry3ls5ny649';
+export const defaultRpc = process.env.REACT_APP_RPC_ENDPOINT ?? "127.0.0.1:26657";
 
 export const getChainAssets = (chainName: string = defaultChainName) => {
   return assets.find((chain) => chain.chain_name === chainName) as AssetList;
