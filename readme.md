@@ -5,4 +5,6 @@
 
 To run local chain use [localdev manual](./docs/localdev.md)
 
-To compile, upload and test smart accounts use [run contract manual](./docs/run-contracts.md)
+To compile, upload and test smart accounts with cli use [run contract manual](./docs/run-contracts.md)
+
+To use client use [run client manual](./docs/run-client.md)
