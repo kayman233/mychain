@@ -1,9 +1,7 @@
-import React, { MouseEventHandler, useState, ReactNode } from 'react';
-import { Button, Box, Input, Icon, useDisclosure, Modal, ModalOverlay, ModalHeader, ModalContent, ModalFooter, ModalBody, Text, NumberInput, NumberInputField } from '@chakra-ui/react';
+import React, { useState } from 'react';
+import { Button, Box, Input, Icon, useDisclosure, Modal, ModalOverlay, ModalHeader, ModalContent, ModalFooter, ModalBody, Text, NumberInput, NumberInputField, useToast, ModalCloseButton } from '@chakra-ui/react';
 import { IoAdd } from 'react-icons/io5';
-import { ConnectWalletType, CreateAAType } from '../types';
-import { FiAlertTriangle } from 'react-icons/fi';
-import { WalletStatus } from '@cosmos-kit/core';
+import { CreateAAType } from '../types';
 
 export const CreateAAButton = ({
   buttonText,
@@ -14,19 +12,44 @@ export const CreateAAButton = ({
     const [newThreshold, setNewThreshold] = useState<string>('1'); 
     const [guardiansCount, setGuardiansCount] = useState<string>('1');
     const [newGuardians, setNewGuardians] = useState<string[]>(['']);
-  
+    const [isLoading, setLoading] = useState<boolean>(false);
+    const toast = useToast();
+
     const { isOpen, onOpen, onClose } = useDisclosure()
 
     const onClick = async () => {
-        console.log("handleCreate");
-        console.log(newGuardians);
-        const filtered = newGuardians.filter((guardian) => guardian.length > 0)
-                                    .filter((item, i, ar) => ar.indexOf(item) === i);
-        if (Number(newThreshold) > filtered.length) {
-            return;
-        }
+        setLoading(true);
+        try {
+            const filtered = newGuardians
+                .filter((guardian) => guardian.length > 0)
+                .filter((item, i, ar) => ar.indexOf(item) === i);
 
-        await handleCreate?.({funds: newFunds, guardians: filtered, threshold: Number(newThreshold)});
+            if (Number(newThreshold) > filtered.length) {
+                throw Error('Error sending');
+            }
+
+            const result = await handleCreate?.({funds: newFunds, guardians: filtered, threshold: Number(newThreshold)}) as unknown as string;
+
+            if (result?.length > 0) {
+                toast({
+                    title: 'Account created',
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            } else {
+                throw Error('Error sending')
+            }
+        } catch (error: any) {
+            toast({
+                title: 'Fail creating',
+                description: error,
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        }
+        setLoading(false);
         onClose();
     }
 
@@ -74,11 +97,11 @@ export const CreateAAButton = ({
       <Icon as={IoAdd} mr={2} />
       {buttonText ? buttonText : 'Create Smart Account'}
     </Button>
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+    <Modal closeOnOverlayClick={!isLoading} isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Create Smart Account</ModalHeader>
-          {/* <ModalCloseButton /> */}
+          <ModalCloseButton isDisabled={isLoading} />
           <ModalBody>
             <Text marginTop="3" marginBottom="3" fontSize='sm' fontWeight="semibold">
                 Threshold:
@@ -116,12 +139,10 @@ export const CreateAAButton = ({
                 />
                 ))}
             </Box>
-            {/* <Input placeholder='Guardian' value={newGuardians} onChange={(e: any) => setNewGuardians([e.target.value])} /> */}
           </ModalBody>
-
           <ModalFooter justifyContent='space-around'>
-            <Button colorScheme='purple' variant='outline' onClick={addRow}>Add Guardian</Button>
-            <Button colorScheme='purple' variant='solid' onClick={onClick}>Create</Button>
+            <Button colorScheme='purple' variant='outline' isLoading={isLoading} onClick={addRow}>Add Guardian</Button>
+            <Button colorScheme='purple' variant='solid' isLoading={isLoading} onClick={onClick}>Create</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

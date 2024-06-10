@@ -26,7 +26,7 @@ export const InfoAccordion = ({info}: {
 
   return (
     <Accordion defaultIndex={[0]} allowMultiple width="100%">
-        <AccordionItem>
+        <AccordionItem key="key">
             <h2>
             <AccordionButton justifyContent="center">
                 <Text fontSize='sm' fontWeight="semibold">
@@ -39,7 +39,7 @@ export const InfoAccordion = ({info}: {
                 <ConnectedShowAddress size='sm' address={info.pubkey} isLoading={false} maxDisplayLength={8} />
             </AccordionPanel>
         </AccordionItem>
-        <AccordionItem>
+        <AccordionItem key="guardian">
             <h2>
             <AccordionButton justifyContent="center">
                 <Text fontSize='sm' fontWeight="semibold">
@@ -51,14 +51,14 @@ export const InfoAccordion = ({info}: {
             <AccordionPanel pb={4}>
                 <OrderedList>
                     {info.guardians?.guardians.map((guardian) => {
-                        return <ListItem marginBottom='1'>
+                        return <ListItem key={`${guardian}List`} marginBottom='1'>
                             <ConnectedShowAddress size='sm' address={guardian} isLoading={false} />
                         </ListItem>
                     })}
                     </OrderedList>
             </AccordionPanel>
         </AccordionItem>
-        <AccordionItem>
+        <AccordionItem key="votes">
             <h2>
             <AccordionButton justifyContent="center">
                 <Text fontSize='sm' fontWeight="semibold">
@@ -73,7 +73,7 @@ export const InfoAccordion = ({info}: {
                 </>) : 
                 <OrderedList>
                     {votes?.map((vote) => {
-                        return (<ListItem alignItems='center'>
+                        return (<ListItem key={vote.pubkey} alignItems='center'>
                             <Text fontSize='sm' fontWeight="semibold" width="100%" marginBottom='1'>
                                 New pubkey :
                             </Text>
@@ -83,7 +83,7 @@ export const InfoAccordion = ({info}: {
                             </Text>
                             <UnorderedList>
                                 {vote.voters?.map((voter) => {
-                                    return <ListItem marginBottom='1'>
+                                    return <ListItem key={voter.addr} marginBottom='1'>
                                         <ConnectedShowAddress size='sm' address={voter.addr} isLoading={false} />
                                     </ListItem>;
                                 })}

@@ -15,7 +15,9 @@ type CreateResponse = {
     events: Event[],
 }
 
-export function useCreateAA() {
+export function useCreateAA(
+    setTxHash: (v: string) => void,
+) {
     const { address, getOfflineSigner } = useChain(defaultChainName);
 
     const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(null); 
@@ -43,7 +45,6 @@ export function useCreateAA() {
         const pubKey = await signingClientCosmos.getAccount(address).then(acc => acc?.pubkey);
 
         if (!pubKey) {
-            console.log("pubKey", pubKey);
             return;
         }
 
@@ -70,7 +71,6 @@ export function useCreateAA() {
         const res = await axios.post<CreateResponse>(`${defaultBackendEndpoint}/create`, data, headers);
 
         if (!res.data.events) {
-            console.log("error events");
             return;
         }
 
@@ -79,14 +79,12 @@ export function useCreateAA() {
         });
 
         if (!createEvent) {
-            console.log("No create event");
             return;
         }
 
         const attr = createEvent.attributes.find((attr) => Buffer.from(attr.key).toString() === "contract_addr");
 
         if (!attr) {
-            console.log("No attribute");
             return;
         }
 
@@ -94,7 +92,10 @@ export function useCreateAA() {
 
         setContractAddress(resContractAddress);
         localStorage.setItem('contractAddress', resContractAddress);
-    }, [address, setContractAddress, signingClientCosmos]);
+        setTxHash(res.data.txHash);
+
+        return res.data.txHash as any;
+    }, [address, setContractAddress, setTxHash, signingClientCosmos]);
 
     return { contractAddress, handleCreateAA };
 }

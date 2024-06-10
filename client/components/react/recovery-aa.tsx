@@ -1,9 +1,7 @@
-import React, { MouseEventHandler, useState, ReactNode } from 'react';
-import { Button, Input, Icon, useDisclosure, Modal, ModalOverlay, ModalHeader, ModalContent, ModalFooter, ModalBody } from '@chakra-ui/react';
+import React, { useState } from 'react';
+import { Button, Input, Icon, useDisclosure, Modal, ModalOverlay, ModalHeader, ModalContent, ModalFooter, ModalBody, useToast, ModalCloseButton } from '@chakra-ui/react';
 import { IoBuildSharp } from 'react-icons/io5';
-import { ConnectWalletType, CreateAAType, RecoverAAType } from '../types';
-import { FiAlertTriangle } from 'react-icons/fi';
-import { WalletStatus } from '@cosmos-kit/core';
+import { RecoverAAType } from '../types';
 
 export const RecoveryAAButton = ({
   buttonText,
@@ -13,18 +11,64 @@ export const RecoveryAAButton = ({
   handleRevoke,
 }: RecoverAAType) => {
     const [newkey, setNewkey] = useState<string | undefined>('');
+    const [isLoading, setLoading] = useState<boolean>(false);
+    const toast = useToast();
 
     const { isOpen, onOpen, onClose } = useDisclosure()
 
     const onRecoverClick = async () => {
-        console.log("onRecoverClick");
-        await handleRecover?.(newkey);
+        setLoading(true);
+        try {
+            const result = await handleRecover?.(newkey) as unknown as string;
+
+            if (result?.length > 0) {
+                toast({
+                    title: 'Recover sent',
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            } else {
+                throw Error('Error sending')
+            }
+        } catch (error: any) {
+            toast({
+                title: 'Error sending',
+                description: error,
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        }
+        setLoading(false);
         onClose();
     }
 
     const onRevokeClick = async () => {
-        console.log("onRevokeClick");
-        await handleRevoke?.();
+        setLoading(true);
+        try {
+            const result = await handleRevoke?.() as unknown as string;
+
+            if (result?.length > 0) {
+                toast({
+                    title: 'Revoke sent',
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            } else {
+                throw Error('Error sending')
+            }
+        } catch (error: any) {
+            toast({
+                title: 'Error sending',
+                description: error,
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        }
+        setLoading(false);
         onClose();
     }
   return (
@@ -53,18 +97,18 @@ export const RecoveryAAButton = ({
       <Icon as={IoBuildSharp} mr={2} />
       {buttonText ? buttonText : 'Recovery'}
     </Button>
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+    <Modal closeOnOverlayClick={!isLoading} isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Recovery</ModalHeader>
-          {/* <ModalCloseButton /> */}
+          <ModalCloseButton isDisabled={isLoading} />
           <ModalBody>
           <Input isDisabled={voted} placeholder='New Pubkey' value={newkey} onChange={(e: any) => setNewkey(e.target.value)} />
           </ModalBody>
 
           <ModalFooter justifyContent='space-around'>
-            <Button colorScheme='purple' variant='solid' isDisabled={voted} onClick={() => onRecoverClick()}>Recover</Button>
-            <Button colorScheme='purple' variant='outline' isDisabled={!voted} onClick={() => onRevokeClick()}>Revoke</Button>
+            <Button colorScheme='purple' variant='solid' isLoading={isLoading} isDisabled={voted} onClick={() => onRecoverClick()}>Recover</Button>
+            <Button colorScheme='purple' variant='outline' isLoading={isLoading} isDisabled={!voted} onClick={() => onRevokeClick()}>Revoke</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

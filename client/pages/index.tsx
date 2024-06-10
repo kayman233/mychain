@@ -1,18 +1,10 @@
 import Head from 'next/head';
 import {
-  Box,
-  Divider,
-  Heading,
-  Text,
-  Stack,
   Container,
-  Link,
   Button,
   Flex,
   Icon,
   useColorMode,
-  useColorModeValue,
-  Input,
 } from '@chakra-ui/react';
 import { BsFillMoonStarsFill, BsFillSunFill } from 'react-icons/bs';
 import { FaHome } from "react-icons/fa";
@@ -37,6 +29,8 @@ export default function Home() {
   const { chainRecords, getChainLogo } = useManager();
   const { chain: chainInfo } = useChain(defaultChainName);
 
+  const [txHash, setTxHash] = useState<string>(''); 
+
   const chain = {
     chainName: defaultChainName,
     label: chainInfo.pretty_name,
@@ -44,9 +38,9 @@ export default function Home() {
     icon: getChainLogo(defaultChainName),
   };
 
-  const { handleCreateAA, contractAddress } = useCreateAA()
-  const { accountInfo, isGuardian, userPubkey, txHash: txHashA, contractAddressLocal, handleRecover, handleRevoke } = useAA(contractAddress);
-  const { balance, txHash, result, accountBalance, handleSend, handleSendAA } = useBalances(contractAddressLocal);
+  const { handleCreateAA, contractAddress } = useCreateAA(setTxHash)
+  const { accountInfo, isGuardian, contractAddressLocal, handleRecover, handleRevoke } = useAA(contractAddress, txHash, setTxHash);
+  const { balance, accountBalance, handleSend, handleSendAA } = useBalances(contractAddressLocal, txHash, setTxHash);
 
   return (
     <Container maxW="5xl" py={2}>

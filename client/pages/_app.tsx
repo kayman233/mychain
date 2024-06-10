@@ -6,18 +6,11 @@ import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
 
-import { SignerOptions } from '@cosmos-kit/core';
 import { chains, assets } from 'chain-registry';
 import { chain } from "../config/chain"
 import { assetlist } from "../config/assetlist"
 
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
-  const signerOptions: SignerOptions = {
-    // signingStargate: (_chain: Chain) => {
-    //   return getSigningCosmosClientOptions();
-    // }
-  };
-
   return (
     <ChakraProvider theme={defaultTheme}>
       <ChainProvider
@@ -40,7 +33,6 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
           isLazy: true
         }}
         wrappedWithChakra={true}
-        signerOptions={signerOptions}
       >
         <Component {...pageProps} />
       </ChainProvider>

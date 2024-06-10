@@ -2,15 +2,19 @@ import { useChain } from '@cosmos-kit/react';
 import { defaultChainName } from '../config';
 import { useCallback, useEffect, useState } from 'react';
 import { SocialRecoveryClient } from '../codegen/SocialRecovery.client';
-import { WalletAccount } from '@cosmos-kit/core';
 import { ArrayOfCountsResponse, ArrayOfVotesResponse, GuardiansListResp } from '../codegen/SocialRecovery.types';
 
-export function useAA(contractAddress: string | undefined) {
-    const { address, getSigningCosmWasmClient, getAccount } = useChain(defaultChainName);
+// to wait until the tx is in the block
+export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+export function useAA(
+    contractAddress: string | undefined,
+    txHash: string,
+    setTxHash: (v: string) => void,
+) {
+    const { address, getSigningCosmWasmClient } = useChain(defaultChainName);
 
     const [signingClient, setSigningClient] = useState<SocialRecoveryClient | null>(null); 
-    const [account, setAccount] = useState<WalletAccount | null>(null); 
-    const [txHash, setTxHash] = useState<string | undefined>(undefined); 
     const [pubkey, setPubkey] = useState<string | null>(null);
     const [threshold, setThreshold] = useState<number | null>(null);
     const [isGuardian, setIsGuardian] = useState<boolean>(false);
@@ -19,8 +23,6 @@ export function useAA(contractAddress: string | undefined) {
     const [counts, setCounts] = useState<ArrayOfCountsResponse | null>(null);
     
     const [contractAddressLocal, setLocalContractAddress] = useState<string>('');
-
-    const [userPubkey, setUserPubkey] = useState<string | null>(null);
 
     useEffect(() => {
         const contractAddressFromLocal = localStorage.getItem('contractAddress');
@@ -40,19 +42,7 @@ export function useAA(contractAddress: string | undefined) {
             const newClient = new SocialRecoveryClient(client, address, contractAddressLocal);
             setSigningClient(newClient);
         })
-    }, [address]);
-
-    useEffect(() => {
-        if (!address) {
-            return;
-        }
-        getAccount().then((acc) => {
-            if (!acc) {
-                return;
-            }
-            setAccount(acc);
-        })
-    }, [address]);
+    }, [address, contractAddressLocal]);
 
     useEffect(() => {
         if (signingClient) {
@@ -68,14 +58,7 @@ export function useAA(contractAddress: string | undefined) {
             signingClient.counts().then((res) => setCounts(res));
             signingClient.votes().then((res) => setVotes(res));
         }
-    }, [signingClient, address]);
-
-    useEffect(() => {
-        if (account) {
-            const str = Buffer.from(account.pubkey).toString('base64');
-            setUserPubkey(str);
-        }
-    }, [account?.pubkey]);
+    }, [signingClient, address, txHash, contractAddress]);
 
     const handleRecover = useCallback(async (newPubkey: string | undefined) => {
         if (!signingClient || !address || !newPubkey) {
@@ -83,8 +66,10 @@ export function useAA(contractAddress: string | undefined) {
         }
 
         const result = await signingClient.recover({newPubkey}, { gas: "1000000", amount: []});
+        await delay(3000);
         setTxHash(result.transactionHash);
-    }, [address, signingClient]);
+        return result.transactionHash as any;
+    }, [address, signingClient, setTxHash]);
 
     const handleRevoke = useCallback(async () => {
         if (!signingClient || !address) {
@@ -92,8 +77,10 @@ export function useAA(contractAddress: string | undefined) {
         }
 
         const result = await signingClient.revoke({ gas: "1000000", amount: []});
+        await delay(3000);
         setTxHash(result.transactionHash);
-    }, [address, signingClient]);
+        return result.transactionHash as any;
+    }, [address, signingClient, setTxHash]);
 
-    return { accountInfo: {pubkey, threshold, guardians, counts, votes} , isGuardian, userPubkey, txHash, contractAddressLocal, handleRecover, handleRevoke};
+    return { accountInfo: {pubkey, threshold, guardians, counts, votes} , isGuardian, txHash, contractAddressLocal, handleRecover, handleRevoke};
 }

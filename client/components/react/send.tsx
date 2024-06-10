@@ -1,9 +1,7 @@
-import React, { MouseEventHandler, useState, ReactNode } from 'react';
-import { Button, Input, Icon, useDisclosure, Modal, ModalOverlay, ModalHeader, ModalContent, ModalFooter, ModalBody, NumberInput, NumberInputField, Text } from '@chakra-ui/react';
+import React, { useState } from 'react';
+import { Button, Input, Icon, useDisclosure, Modal, ModalOverlay, ModalHeader, ModalContent, ModalFooter, ModalBody, NumberInput, NumberInputField, Text, useToast, ModalCloseButton } from '@chakra-ui/react';
 import { IoPaperPlane } from 'react-icons/io5';
-import { ConnectWalletType, CreateAAType, SendType } from '../types';
-import { FiAlertTriangle } from 'react-icons/fi';
-import { WalletStatus } from '@cosmos-kit/core';
+import { SendType } from '../types';
 
 export const SendButton = ({
   buttonText,
@@ -14,16 +12,63 @@ export const SendButton = ({
 }: SendType) => {
     const [recipient, setRecipient] = useState<string | undefined>(''); 
     const [amount, setAmount] = useState<string | undefined>('1000');
-    
+    const [isLoading, setLoading] = useState<boolean>(false);
+    const toast = useToast();
+
     const { isOpen, onOpen, onClose } = useDisclosure()
 
     const onClickSend = async () => {
-        await handleSend?.(amount, recipient);
+        setLoading(true);
+        try {
+            const result = await handleSend?.(amount, recipient) as unknown as string;
+
+            if (result?.length > 0) {
+                toast({
+                    title: 'Sended',
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            } else {
+                throw Error('Error sending')
+            }
+        } catch (error: any) {
+            toast({
+                title: 'Error sending',
+                description: error,
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        }
+        setLoading(false);
         onClose();
     }
 
     const onClickSendAA = async () => {
-        await handleSendAA?.(amount, recipient);
+        setLoading(true);
+        try {
+            const result = await handleSendAA?.(amount, recipient) as unknown as string;
+
+            if (result && result === "success") {
+                toast({
+                    title: 'Sended',
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            } else {
+                throw Error('Error sending')
+            }
+        } catch (error: any) {
+            toast({
+                title: 'Error sending',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        }
+        setLoading(false);
         onClose();
     }
   return (
@@ -53,11 +98,11 @@ export const SendButton = ({
       <Icon as={IoPaperPlane} mr={2} />
       {buttonText ? buttonText : 'Send tokens'}
     </Button>
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+    <Modal closeOnOverlayClick={!isLoading} isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Send Tokens</ModalHeader>
-          {/* <ModalCloseButton /> */}
+          <ModalCloseButton isDisabled={isLoading} />
           <ModalBody>
             <Text marginTop="3" marginBottom="3" fontSize='sm' fontWeight="semibold">
                 Address:
@@ -78,8 +123,8 @@ export const SendButton = ({
             {/* <Input placeholder='Amount' value={amount} onChange={(e: any) => setAmount(e.target.value)} /> */}
         </ModalBody>
           <ModalFooter justifyContent='space-around'>
-            <Button colorScheme='purple' variant='solid' onClick={() => onClickSendAA()}>Send from Smart Account</Button>
-            <Button colorScheme='purple' variant='outline' isDisabled={contractAddress?.length === 0} onClick={() => onClickSend()}>Send</Button>
+            <Button colorScheme='purple' variant='solid' isLoading={isLoading} isDisabled={contractAddress?.length === 0} onClick={() => onClickSendAA()}>Send from Smart Account</Button>
+            <Button colorScheme='purple' variant='outline' isLoading={isLoading} onClick={() => onClickSend()}>Send</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

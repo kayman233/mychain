@@ -4,13 +4,17 @@ import { SigningStargateClient, SigningStargateClientOptions, StargateClient } f
 import { useCallback, useEffect, useState } from 'react';
 import { accountFromAny } from '../config/accounts';
 import axios from 'axios';
+import { delay } from './useAA';
 
-export function useBalances(localContractAddress: string | undefined) {
+export function useBalances(
+    localContractAddress: string | undefined,
+    txHash: string,
+    setTxHash: (v: string) => void,
+) {
     const { address, getStargateClient, signAndBroadcast, getOfflineSigner, username } = useChain(defaultChainName);
 
     const [clientCosmos, setClientCosmos] = useState<StargateClient | null>(null); 
     const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(null); 
-    const [txHash, setTxHash] = useState<string>(''); 
     const [accountBalance, setAccountBalance] = useState<string>('');
     const [balance, setBalance] = useState<string>('');
     const [result, setResult] = useState('');
@@ -48,7 +52,7 @@ export function useBalances(localContractAddress: string | undefined) {
                 clientCosmos.getBalance(localContractAddress, "stake").then((res) => setAccountBalance(res.amount))
             }
         }
-    }, [address, clientCosmos, localContractAddress]);
+    }, [address, clientCosmos, txHash, localContractAddress]);
 
     const handleSend = useCallback(async (amount: string | undefined, recipient: string | undefined) => {
         if (!clientCosmos) {
@@ -76,12 +80,13 @@ export function useBalances(localContractAddress: string | undefined) {
         ];
 
         const result = await signingClientCosmos.signAndBroadcast(address, message, { gas: "200000", amount: []});
+        await delay(3000);
         setTxHash(result.transactionHash);
+        return result.transactionHash as any;
     }, [signAndBroadcast, address, setTxHash, signingClientCosmos]);
 
     const handleSendAA = useCallback(async (amount: string | undefined, recipient: string | undefined) => {    
         if (!localContractAddress || !recipient || !amount || !username) {
-            console.error('Error sending', localContractAddress, recipient, amount, username);
             return;
         }
         const data = {
@@ -97,14 +102,11 @@ export function useBalances(localContractAddress: string | undefined) {
             }
         };
 
-        await axios.post(`${defaultBackendEndpoint}/send`, data, headers)
-            .then(response => {
-                setResult(response.data.result);
-            })
-            .catch(error => {
-                console.error('Error sending:', error);
-            });
-    }, [localContractAddress, username, setResult]);
+        const response = await axios.post(`${defaultBackendEndpoint}/send`, data, headers);
+        await delay(3000);
+        setTxHash(response.data.txHash);
+        return response.data.result;
+    }, [localContractAddress, username, setResult, setTxHash]);
 
     return { balance: balance ?? undefined, txHash, result, accountBalance, handleSend, handleSendAA };
 }
