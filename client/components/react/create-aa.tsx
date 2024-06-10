@@ -8,7 +8,7 @@ export const CreateAAButton = ({
   isDisabled,
   handleCreate,
 }: CreateAAType) => {
-    const [newFunds, setNewFunds] = useState<string>('1000'); 
+    const [newFunds, setNewFunds] = useState<string>('100000'); 
     const [newThreshold, setNewThreshold] = useState<string>('1'); 
     const [guardiansCount, setGuardiansCount] = useState<string>('1');
     const [newGuardians, setNewGuardians] = useState<string[]>(['']);
@@ -118,7 +118,7 @@ export const CreateAAButton = ({
                 Funds(stake):
             </Text>
             <NumberInput
-                defaultValue="1000"
+                defaultValue="100000"
                 min={1}
                 value={newFunds}
                 onChange={(value) => setNewFunds(value)}

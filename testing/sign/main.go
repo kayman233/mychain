@@ -25,7 +25,7 @@ const (
 	fileIn         = "./1-bank-send-unsigned.json"
 	fileOut        = "./1-bank-send.json"
 	grpcURL        = "127.0.0.1:9090"
-	keyName        = "user2"
+	keyName        = "user1"
 	keyringBackend = "test"
 	rootDir        = "/.mychain"
 	signMode       = signing.SignMode_SIGN_MODE_DIRECT

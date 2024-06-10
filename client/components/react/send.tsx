@@ -24,7 +24,7 @@ export const SendButton = ({
 
             if (result?.length > 0) {
                 toast({
-                    title: 'Sended',
+                    title: 'Funds were sent',
                     status: 'success',
                     duration: 5000,
                     isClosable: true,
@@ -52,7 +52,7 @@ export const SendButton = ({
 
             if (result && result === "success") {
                 toast({
-                    title: 'Sended',
+                    title: 'Funds were sent',
                     status: 'success',
                     duration: 5000,
                     isClosable: true,
@@ -120,7 +120,6 @@ export const SendButton = ({
             >
                 <NumberInputField />
             </NumberInput>
-            {/* <Input placeholder='Amount' value={amount} onChange={(e: any) => setAmount(e.target.value)} /> */}
         </ModalBody>
           <ModalFooter justifyContent='space-around'>
             <Button colorScheme='purple' variant='solid' isLoading={isLoading} isDisabled={contractAddress?.length === 0} onClick={() => onClickSendAA()}>Send from Smart Account</Button>

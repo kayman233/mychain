@@ -40,7 +40,6 @@ go run main.go
 ### Run local client server
 
 ```
-cd ../..
 nvm use
 
 cd client

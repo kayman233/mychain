@@ -23,7 +23,7 @@ export const RecoveryAAButton = ({
 
             if (result?.length > 0) {
                 toast({
-                    title: 'Recover sent',
+                    title: 'Recovery is successful',
                     status: 'success',
                     duration: 5000,
                     isClosable: true,
@@ -51,7 +51,7 @@ export const RecoveryAAButton = ({
 
             if (result?.length > 0) {
                 toast({
-                    title: 'Revoke sent',
+                    title: 'Revoke is successful',
                     status: 'success',
                     duration: 5000,
                     isClosable: true,

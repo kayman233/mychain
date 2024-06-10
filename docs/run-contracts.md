@@ -13,7 +13,6 @@ docker run --rm -v "$(pwd)":/code \
 cd ..
 ```
 ### Upload
-
 ```
 export PATH_TO_WASM_FILE="./cosmwasm/artifacts/social_recovery.wasm"
 export SIGNER=user1
@@ -27,6 +26,7 @@ mychaind tx wasm store \
     --gas-adjustment 1.4 \
     --keyring-backend test
 ```
+If for some reason it doesn't work, try uploading an already compiled contract `./testing/social_recovery.wasm`.
 
 ### Generate account and get addr
 
@@ -47,12 +47,12 @@ mychaind tx abstract-account register $CODE_ID $INIT_MSG \
 
 mychaind q tx <insert_txhash>
 ```
-In last attributes(before raw_log), key: contract_addr is the address. To export it:
+In last attributes of the last event `account_registered`(above raw_log), `key: contract_addr` is the address. To export it (if you follow the file, then the address should be the same as here):
 ```
 export ACCOUNT_ADDR=cosmos1mssg28kaflv6g25phn7ncv25ygtky0najzqvjl0cay8fg95ry3ls5ny649
 ```
 
-Also change address in testing/*.json files
+Also change contract address in `testing/*.json` files
 
 ### View state of the account
 ```
@@ -71,17 +71,19 @@ go run sign/main.go
 
 mychaind q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
 mychaind q bank balances $ACCOUNT_ADDR
-cosmos1kkwxqgrp079qz6l5ts7eu2erd59d5n3vxswfv5992svj27smpkxqufes28
+
 mychaind tx broadcast 1-bank-send.json
 
 mychaind q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
 mychaind q bank balances $ACCOUNT_ADDR
-
 ```
+
+You can change `keyName` in the `sign/main.go` file to modify the user for signing
 
 ### To run social recovery tx use simple sign, for example:
 
-cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
+Use `cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny` as sender in `recover-unsigned.json` and run:
+
 ```
 mychaind tx sign ./recover-unsigned.json \
     --from user2 \
@@ -91,8 +93,11 @@ mychaind tx sign ./recover-unsigned.json \
     --keyring-backend test > recover.json
 
 mychaind tx broadcast recover.json
+```
 
-cosmos1w3egyz0x8qs3c6sg8mx37y3fz4mu6zz0s5slpu
+Use `cosmos1w3egyz0x8qs3c6sg8mx37y3fz4mu6zz0s5slpu` as sender in `recover-unsigned.json` and run:
+
+```
 mychaind tx sign ./recover-unsigned.json \
     --from user3 \
     --chain-id $CHAIN_ID \
