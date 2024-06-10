@@ -1,4 +1,4 @@
-import { useChain, useManager } from '@cosmos-kit/react';
+import { useChain } from '@cosmos-kit/react';
 import {
   Box,
   Center,
@@ -8,7 +8,8 @@ import {
   Stack,
   useColorMode,
 } from '@chakra-ui/react';
-import { MouseEventHandler, useEffect, useMemo, useState } from 'react';
+import { WalletStatus } from "@cosmos-kit/core";
+import { MouseEventHandler, useEffect } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import {
   Astronaut,
@@ -24,32 +25,34 @@ import {
   Rejected,
   RejectedWarn,
   WalletConnectComponent,
-  handleSelectChainDropdown,
-  ChainCard,
-  ChooseChain,
-  ChainOption,
   ConnectWalletButton,
 } from '../components';
 import { defaultChainName } from '../config';
 import { ChainName } from '@cosmos-kit/core';
-
-const allowedChains = [
-  'gmrollup',
-  'celestiatestnet',
-  'celestiatestnet2',
-  'celestiatestnet3',
-];
+import { ConnectedUserBalanceInfo } from './react/user-balance';
+import { CreateAAButton } from './react/create-aa';
+import { CreateAccountType } from '../hooks/types';
+import { SendButton } from './react/send';
 
 export const WalletSection = ({
   isMultiChain,
+  balance,
   providedChainName,
+  contractAddress,
+  handleCreate,
   setChainName,
+  handleSend,
+  handleSendAA,
 }: {
   isMultiChain: boolean;
+  balance?: string;
   providedChainName?: ChainName;
+  contractAddress?: string,
+  handleCreate?: (params: CreateAccountType) => Promise<void>;
   setChainName?: (chainName: ChainName | undefined) => void;
+  handleSend?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
+  handleSendAA?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
 }) => {
-  const { chainRecords, getChainLogo } = useManager();
   const {
     connect,
     openView,
@@ -58,31 +61,8 @@ export const WalletSection = ({
     address,
     message,
     wallet,
-    chain: chainInfo,
   } = useChain(providedChainName || defaultChainName);
   const { colorMode } = useColorMode();
-
-  const chain = {
-    chainName: defaultChainName,
-    label: chainInfo.pretty_name,
-    value: defaultChainName,
-    icon: getChainLogo(defaultChainName),
-  };
-
-  const chainOptions = useMemo(
-    () =>
-      chainRecords
-      .filter((chainRecord) => allowedChains.includes(chainRecord.name))
-      .map((chainRecord) => {
-        return {
-          chainName: chainRecord?.name,
-          label: chainRecord?.chain.pretty_name,
-          value: chainRecord?.name,
-          icon: getChainLogo(chainRecord.name),
-        };
-      }),
-    [chainRecords, getChainLogo]
-  );
 
   // Events
   const onClickConnect: MouseEventHandler = async (e) => {
@@ -136,28 +116,25 @@ export const WalletSection = ({
     setChainName?.(window.localStorage.getItem('selected-chain') || 'osmosis');
   }, [setChainName]);
 
-  const onChainChange: handleSelectChainDropdown = async (
-    selectedValue: ChainOption | null
-  ) => {
-    setChainName?.(selectedValue?.chainName);
-    if (selectedValue?.chainName) {
-      window?.localStorage.setItem('selected-chain', selectedValue?.chainName);
-    } else {
-      window?.localStorage.removeItem('selected-chain');
-    }
-  };
-
-  const chooseChain = (
-    <ChooseChain
-      chainName={providedChainName}
-      chainInfos={chainOptions}
-      onChange={onChainChange}
-    />
-  );
-
   const userInfo = username && (
     <ConnectedUserInfo username={username} icon={<Astronaut />} />
   );
+  const userBalance = status === WalletStatus.Connected && balance && (
+    <ConnectedUserBalanceInfo balance={balance} />
+  )
+  const createBtn = (
+    <CreateAAButton isDisabled={status !== WalletStatus.Connected} handleCreate={handleCreate} />
+  )
+
+  const sendBtn = (
+    <SendButton 
+      isDisabled={status !== WalletStatus.Connected} 
+      handleSend={handleSend} 
+      handleSendAA={handleSendAA}
+      contractAddress={contractAddress}
+    />
+  )
+
   const addressBtn = (
     <CopyAddressBtn
       walletStatus={status}
@@ -175,16 +152,6 @@ export const WalletSection = ({
         alignItems="center"
         justifyContent="center"
       >
-        {isMultiChain ? (
-          <GridItem>{chooseChain}</GridItem>
-        ) : (
-          <GridItem marginBottom={'20px'}>
-            <ChainCard
-              prettyName={chain?.label || defaultChainName}
-              icon={chain?.icon}
-            />
-          </GridItem>
-        )}
         {!providedChainName && isMultiChain ? (
           <ConnectWalletButton buttonText={'Connect Wallet'} isDisabled />
         ) : (
@@ -204,9 +171,16 @@ export const WalletSection = ({
               py={{ base: 6, md: 12 }}
             >
               {userInfo}
+              {userBalance}
               {addressBtn}
               <Box w="full" maxW={{ base: 52, md: 64 }}>
                 {connectWalletButton}
+              </Box>
+              <Box w="full" maxW={{ base: 52, md: 64 }}>
+                {createBtn}
+              </Box>
+              <Box w="full" maxW={{ base: 52, md: 64 }} >
+                {sendBtn}
               </Box>
               {connectWalletWarn && <GridItem>{connectWalletWarn}</GridItem>}
             </Stack>

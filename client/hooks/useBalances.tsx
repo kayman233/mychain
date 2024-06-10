@@ -1,18 +1,18 @@
 import { useChain } from '@cosmos-kit/react';
-import { defaultChainName, defaultRpc } from '../config';
+import { defaultBackendEndpoint, defaultChainName, defaultRpc } from '../config';
 import { SigningStargateClient, SigningStargateClientOptions, StargateClient } from "@cosmjs/stargate"
 import { useCallback, useEffect, useState } from 'react';
 import { accountFromAny } from '../config/accounts';
 import axios from 'axios';
 
-export function useBalances(amount: string | undefined, recipient: string | undefined, localContractAddress: string | undefined) {
+export function useBalances(localContractAddress: string | undefined) {
     const { address, getStargateClient, signAndBroadcast, getOfflineSigner, username } = useChain(defaultChainName);
 
     const [clientCosmos, setClientCosmos] = useState<StargateClient | null>(null); 
     const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(null); 
-    const [txHash, setTxHash] = useState<string | undefined>(undefined); 
-    const [accountBalance, setAccountBalance] = useState<string | null>(null);
-    const [balance, setBalance] = useState<string | null>(null);
+    const [txHash, setTxHash] = useState<string>(''); 
+    const [accountBalance, setAccountBalance] = useState<string>('');
+    const [balance, setBalance] = useState<string>('');
     const [result, setResult] = useState('');
 
     useEffect(() => {
@@ -50,7 +50,7 @@ export function useBalances(amount: string | undefined, recipient: string | unde
         }
     }, [address, clientCosmos, localContractAddress]);
 
-    const handleSend = useCallback(async () => {
+    const handleSend = useCallback(async (amount: string | undefined, recipient: string | undefined) => {
         if (!clientCosmos) {
           return;
         }
@@ -77,9 +77,9 @@ export function useBalances(amount: string | undefined, recipient: string | unde
 
         const result = await signingClientCosmos.signAndBroadcast(address, message, { gas: "200000", amount: []});
         setTxHash(result.transactionHash);
-    }, [signAndBroadcast, address, amount, recipient, setTxHash, signingClientCosmos]);
+    }, [signAndBroadcast, address, setTxHash, signingClientCosmos]);
 
-    const handleSendAA = useCallback(async () => {    
+    const handleSendAA = useCallback(async (amount: string | undefined, recipient: string | undefined) => {    
         if (!localContractAddress || !recipient || !amount || !username) {
             console.error('Error sending', localContractAddress, recipient, amount, username);
             return;
@@ -96,15 +96,15 @@ export function useBalances(amount: string | undefined, recipient: string | unde
                 "Content-Type": "application/json",
             }
         };
-        axios.post('http://localhost:8080/send', data, headers)
+
+        await axios.post(`${defaultBackendEndpoint}/send`, data, headers)
             .then(response => {
                 setResult(response.data.result);
             })
             .catch(error => {
                 console.error('Error sending:', error);
             });
-
-    }, [localContractAddress, username, amount, recipient, setResult]);
+    }, [localContractAddress, username, setResult]);
 
     return { balance: balance ?? undefined, txHash, result, accountBalance, handleSend, handleSendAA };
 }

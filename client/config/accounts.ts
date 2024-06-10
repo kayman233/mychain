@@ -1,9 +1,7 @@
 import { Account, accountFromAny as LegacyAccountFromAny } from "@cosmjs/stargate";
 import { Any } from "cosmjs-types/google/protobuf/any";
 import { Uint64 } from "@cosmjs/math";
-import { decodePubkey } from "@cosmjs/proto-signing";
-import { BaseAccount, ModuleAccount } from "cosmjs-types/cosmos/auth/v1beta1/auth";
-import { AbstractAccount, NilPubKey } from "../codegen/codegen/abstractaccount/v1/account";
+import { AbstractAccount } from "../codegen/codegen/abstractaccount/v1/account";
 
 function uint64FromProto(input: number | bigint): Uint64 {
     return Uint64.fromString(input.toString());
@@ -11,9 +9,6 @@ function uint64FromProto(input: number | bigint): Uint64 {
 
 function accountFromBaseAccount(input: AbstractAccount): Account {
     const { address, accountNumber, sequence } = input;
-    // const pubkey: NilPubKey = {
-    //     addressBytes: new TextEncoder().encode(address),
-    // }
     return {
       address: address,
       pubkey: null,

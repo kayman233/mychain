@@ -5,7 +5,7 @@ import { SocialRecoveryClient } from '../codegen/SocialRecovery.client';
 import { WalletAccount } from '@cosmos-kit/core';
 import { ArrayOfCountsResponse, ArrayOfVotesResponse, GuardiansListResp } from '../codegen/SocialRecovery.types';
 
-export function useAA(newPubkey: string | undefined, contractAddress: string | undefined) {
+export function useAA(contractAddress: string | undefined) {
     const { address, getSigningCosmWasmClient, getAccount } = useChain(defaultChainName);
 
     const [signingClient, setSigningClient] = useState<SocialRecoveryClient | null>(null); 
@@ -52,7 +52,7 @@ export function useAA(newPubkey: string | undefined, contractAddress: string | u
             }
             setAccount(acc);
         })
-    }, [address, getAccount]);
+    }, [address]);
 
     useEffect(() => {
         if (signingClient) {
@@ -75,16 +75,16 @@ export function useAA(newPubkey: string | undefined, contractAddress: string | u
             const str = Buffer.from(account.pubkey).toString('base64');
             setUserPubkey(str);
         }
-    }, [account]);
+    }, [account?.pubkey]);
 
-    const handleRecover = useCallback(async () => {
+    const handleRecover = useCallback(async (newPubkey: string | undefined) => {
         if (!signingClient || !address || !newPubkey) {
           return;
         }
 
         const result = await signingClient.recover({newPubkey}, { gas: "1000000", amount: []});
         setTxHash(result.transactionHash);
-    }, [address, signingClient, newPubkey]);
+    }, [address, signingClient]);
 
     const handleRevoke = useCallback(async () => {
         if (!signingClient || !address) {
@@ -93,7 +93,7 @@ export function useAA(newPubkey: string | undefined, contractAddress: string | u
 
         const result = await signingClient.revoke({ gas: "1000000", amount: []});
         setTxHash(result.transactionHash);
-    }, [address, signingClient, newPubkey]);
+    }, [address, signingClient]);
 
-    return { pubkey, userPubkey, isGuardian, threshold, guardians, counts, votes, txHash, contractAddressLocal, handleRecover, handleRevoke};
+    return { accountInfo: {pubkey, threshold, guardians, counts, votes} , isGuardian, userPubkey, txHash, contractAddressLocal, handleRecover, handleRevoke};
 }

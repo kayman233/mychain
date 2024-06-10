@@ -1,5 +1,5 @@
 import { useChain } from '@cosmos-kit/react';
-import { defaultChainName, defaultRpc } from '../config';
+import { defaultBackendEndpoint, defaultChainName, defaultRpc } from '../config';
 import { SigningStargateClient } from "@cosmjs/stargate"
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
@@ -7,6 +7,7 @@ import axios from 'axios';
 import { getSigningAbstractaccountClient } from '../codegen/codegen';
 import { InstantiateMsg } from '../codegen/SocialRecovery.types';
 import { Event } from '../codegen/codegen/tendermint/abci/types';
+import { CreateAccountType } from './types';
 
 type CreateResponse = {
     result: string
@@ -14,7 +15,7 @@ type CreateResponse = {
     events: Event[],
 }
 
-export function useCreateAA(funds: string | undefined, guardians: string[] | undefined, threshold: number | undefined) {
+export function useCreateAA() {
     const { address, getOfflineSigner } = useChain(defaultChainName);
 
     const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(null); 
@@ -33,7 +34,8 @@ export function useCreateAA(funds: string | undefined, guardians: string[] | und
           })
       }, [address]);
 
-    const handleCreateAA = useCallback(async () => {    
+    const handleCreateAA = useCallback(async (params: CreateAccountType) => {    
+        const { funds, guardians, threshold } = params;
         if (!funds || !guardians || !threshold || !address || !signingClientCosmos) {
           return;
         }
@@ -41,6 +43,7 @@ export function useCreateAA(funds: string | undefined, guardians: string[] | und
         const pubKey = await signingClientCosmos.getAccount(address).then(acc => acc?.pubkey);
 
         if (!pubKey) {
+            console.log("pubKey", pubKey);
             return;
         }
 
@@ -64,7 +67,7 @@ export function useCreateAA(funds: string | undefined, guardians: string[] | und
             }
           };
 
-        const res = await axios.post<CreateResponse>('http://localhost:8080/create', data, headers);
+        const res = await axios.post<CreateResponse>(`${defaultBackendEndpoint}/create`, data, headers);
 
         if (!res.data.events) {
             console.log("error events");
@@ -91,7 +94,7 @@ export function useCreateAA(funds: string | undefined, guardians: string[] | und
 
         setContractAddress(resContractAddress);
         localStorage.setItem('contractAddress', resContractAddress);
-    }, [address, funds, guardians, threshold, setContractAddress, signingClientCosmos]);
+    }, [address, setContractAddress, signingClientCosmos]);
 
     return { contractAddress, handleCreateAA };
 }

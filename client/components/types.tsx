@@ -1,5 +1,6 @@
 import { MouseEventHandler, ReactNode, RefObject } from 'react';
 import { IconType } from 'react-icons';
+import { CreateAccountType } from '../hooks/types';
 
 export interface ChooseChainInfo {
   chainName: string;
@@ -31,10 +32,36 @@ export interface ConnectWalletType {
   onClickConnectBtn?: MouseEventHandler<HTMLButtonElement>;
 }
 
+export interface SendType {
+  buttonText?: string;
+  isDisabled?: boolean;
+  contractAddress?: string;
+  handleSend?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
+  handleSendAA?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
+}
+
+export interface CreateAAType {
+  buttonText?: string;
+  isDisabled?: boolean;
+  handleCreate?: (params: CreateAccountType) => Promise<void>;
+}
+
+export interface RecoverAAType {
+  buttonText?: string;
+  isDisabled?: boolean;
+  handleRecover?: (newPubkey: string | undefined) => Promise<void>;
+  handleRevoke?: () => Promise<void>;
+  voted?: boolean;
+}
+
 export interface ConnectedUserCardType {
   walletIcon?: string;
   username?: string;
   icon?: ReactNode;
+}
+
+export interface ConnectedUserBalanceType {
+  balance?: string;
 }
 
 export interface FeatureProps {

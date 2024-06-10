@@ -71,7 +71,7 @@ go run sign/main.go
 
 mychaind q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
 mychaind q bank balances $ACCOUNT_ADDR
-
+cosmos1kkwxqgrp079qz6l5ts7eu2erd59d5n3vxswfv5992svj27smpkxqufes28
 mychaind tx broadcast 1-bank-send.json
 
 mychaind q bank balances cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny
