@@ -278,6 +278,7 @@ func sendSignAndBroadcast(data SendData) interface{} {
 	}
 
 	fmt.Printf("TxResponse %d\n", grpcRes.TxResponse.Code)
+	fmt.Printf("TxHash %s\n", grpcRes.TxResponse.TxHash)
 
 	if grpcRes.TxResponse.Code != 0 {
 		return map[string]string{"result": "fail"}
@@ -285,6 +286,7 @@ func sendSignAndBroadcast(data SendData) interface{} {
 
 	return map[string]string{
 		"result": "success",
+		"txHash": grpcRes.TxResponse.TxHash,
 	}
 }
 
@@ -470,9 +472,6 @@ func createSignAndBroadcast(data CreateData) interface{} {
 		panic(err)
 	}
 
-	fmt.Println(signerAcc)
-	fmt.Println(keybase)
-
 	pb, err := pubKey.GetPubKey()
 
 	signerData := authsigning.SignerData{
@@ -482,9 +481,6 @@ func createSignAndBroadcast(data CreateData) interface{} {
 		Sequence:      signerAcc.GetSequence(),
 		PubKey:        pb,
 	}
-
-	fmt.Println(signerData)
-	fmt.Println(pb)
 
 	txBuilder, err := encCfg.TxConfig.WrapTxBuilder(stdTx)
 	if err != nil {
@@ -553,7 +549,6 @@ func createSignAndBroadcast(data CreateData) interface{} {
 	if grpcRes.TxResponse.Code != 0 {
 		return map[string]string{"result": "fail"}
 	}
-	fmt.Println(grpcRes.TxResponse.Code) // Should be `0` if the tx is successful
 
 	request := &tx.GetTxRequest{
 		Hash: grpcRes.TxResponse.TxHash,
