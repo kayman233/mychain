@@ -29,9 +29,11 @@ mychaind tx wasm store \
     --gas-adjustment 1.4 \
     --keyring-backend test
 ```
+If for some reason it doesn't work, try uploading an already compiled contract `./testing/social_recovery.wasm`.
 
 ### Run local go server for sending, creating txs of Smart Account
 
+In a new terminal:
 ```
 cd testing/server
 go run main.go
@@ -39,6 +41,7 @@ go run main.go
 
 ### Run local client server
 
+In a new terminal:
 ```
 nvm use
 

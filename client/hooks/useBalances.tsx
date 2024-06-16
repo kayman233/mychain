@@ -99,6 +99,7 @@ export function useBalances(
         const headers = {
             headers: {
                 "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
             }
         };
 

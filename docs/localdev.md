@@ -7,9 +7,14 @@ nvm
 Docker
 ```
 
+Install to get an executable `mychaind` in `$USER/go/bin`
 ```
 make install
+```
 
+And run the chain with pregenerated users:
+
+```
 BINARY=mychaind
 
 MNEMONIC_1="guard cream sadness conduct invite crumble clock pudding hole grit liar hotel maid produce squeeze return argue turtle know drive eight casino maze host"
@@ -39,7 +44,7 @@ $BINARY collect-gentxs
 $BINARY start
 ```
 
-### Local keys:
+### Generated local users as a result:
 
 ```
 - address: cosmos1zaavvzxez0elundtn32qnk9lkm8kmcszzsv80v

@@ -24,6 +24,7 @@ export const chain = {
     "apis": {
       "rpc": [
         {
+          // "address": "http://localhost:26657",
           "address": "127.0.0.1:26657",
           "provider": "JCS"
         }

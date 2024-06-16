@@ -65,6 +65,7 @@ export function useCreateAA(
         const headers = {
             headers: {
               "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
             }
           };
 
