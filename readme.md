@@ -1,6 +1,11 @@
 # mychain
 **mychain** is a blockchain built using Cosmos SDK and Tendermint and created with [Ignite CLI](https://ignite.com/cli).
 
+x/abstractaccount provides account abstraction module to create smart accounts.
+
+It's possible to create smart accounts that provide social recovery using other users (guardians).
+
+Also there's a frontend client to interact with the chain and smart accounts (balances and recovery)
 ## Get started
 
 To run local chain use [localdev manual](./docs/localdev.md)
