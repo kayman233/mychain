@@ -5,3 +5,4 @@ pub const GUARDIANS: Item<Vec<Addr>> = Item::new("guardians");
 pub const THRESHOLD: Item<u64> = Item::new("threshold");
 pub const VOTES: Map<&Addr, Binary> = Map::new("g");
 pub const COUNTS: Map<&str, u64> = Map::new("d");
+pub const KEY_VALUE_STORE: Map<&str, Binary> = Map::new("kv");

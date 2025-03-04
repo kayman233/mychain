@@ -50,7 +50,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: AccountSudoMsg) -> ContractResult<Res
 pub fn execute(
     deps: DepsMut,
     env:  Env,
-    info: MessageInfo,
+    info:  MessageInfo,
     msg:  ExecuteMsg,
 ) -> ContractResult<Response> {
     match msg {
@@ -59,6 +59,8 @@ pub fn execute(
         } => execute::update_pubkey(deps.storage, &info.sender, &env.contract.address, &new_pubkey),
         ExecuteMsg::Recover {new_pubkey} => execute::recover(deps.storage, &info.sender, &new_pubkey),
         ExecuteMsg::Revoke {} => execute::revoke(deps.storage, &info.sender),
+        ExecuteMsg::StoreData { key, value } => execute::store_data(deps.storage, &info.sender, &env.contract.address, &key, &value),
+        ExecuteMsg::RemoveData { key } => execute::remove_data(deps.storage, &info.sender, &env.contract.address, &key),
     }
 }
 
@@ -70,5 +72,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::Threshold {} => to_binary(&query::threshold(deps.storage)?),
         QueryMsg::Votes {} => to_binary(&query::votes(deps.storage)?),
         QueryMsg::Counts {} => to_binary(&query::counts(deps.storage)?),
+        QueryMsg::GetData { key } => to_binary(&query::get_data(deps.storage, &key)?),
+        QueryMsg::GetAllData {} => to_binary(&query::get_all_data(deps.storage)?),
     }
 }

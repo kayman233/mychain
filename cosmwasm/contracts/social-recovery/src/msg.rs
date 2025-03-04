@@ -7,6 +7,7 @@ pub struct InstantiateMsg {
     pub guardians: Vec<String>,
     pub threshold: u64,
 }
+
 #[cw_serde]
 pub enum ExecuteMsg {
     /// Change the pubkey associated with this account.
@@ -19,6 +20,15 @@ pub enum ExecuteMsg {
         new_pubkey: Binary,
     },
     Revoke {},
+    /// Store data by key
+    StoreData {
+        key: String,
+        value: Binary,
+    },
+    /// Remove data by key
+    RemoveData {
+        key: String,
+    },
 }
 
 #[cw_serde]
@@ -39,6 +49,12 @@ pub struct CountsResponse {
 }
 
 #[cw_serde]
+pub struct KeyValueResponse {
+    pub key: String,
+    pub value: Binary,
+}
+
+#[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     /// Query the pubkey associated with this account.
@@ -52,5 +68,12 @@ pub enum QueryMsg {
     Votes {},
     #[returns(Vec<CountsResponse>)]
     Counts {},
+    /// Query data by key
+    #[returns(KeyValueResponse)]
+    GetData {
+        key: String,
+    },
+    /// Query all stored data
+    #[returns(Vec<KeyValueResponse>)]
+    GetAllData {},
 }
-
