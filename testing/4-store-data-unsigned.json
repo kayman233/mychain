@@ -3,8 +3,8 @@
     "messages": [
       {
         "@type": "/cosmwasm.wasm.v1.MsgExecuteContract",
-        "sender": "cosmos1mssg28kaflv6g25phn7ncv25ygtky0najzqvjl0cay8fg95ry3ls5ny649",
-        "contract": "cosmos1mssg28kaflv6g25phn7ncv25ygtky0najzqvjl0cay8fg95ry3ls5ny649",
+        "sender": "cosmos17z6zvh4rme4ekxan8wf88pjvckxr8tn4guwuu5veyd2736vxg52sls9v4c",
+        "contract": "cosmos17z6zvh4rme4ekxan8wf88pjvckxr8tn4guwuu5veyd2736vxg52sls9v4c",
         "msg": {
           "store_data": {
               "key": "my_key",
