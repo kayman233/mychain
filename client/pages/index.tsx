@@ -1,35 +1,25 @@
-import Head from 'next/head';
-import {
-  Container,
-  Button,
-  Flex,
-  Icon,
-  useColorMode,
-} from '@chakra-ui/react';
-import { BsFillMoonStarsFill, BsFillSunFill } from 'react-icons/bs';
+import Head from "next/head";
+import { Container, Button, Flex, Icon, useColorMode } from "@chakra-ui/react";
+import { BsFillMoonStarsFill, BsFillSunFill } from "react-icons/bs";
 import { FaHome } from "react-icons/fa";
-import { useChain, useManager } from '@cosmos-kit/react';
+import { useChain, useManager } from "@cosmos-kit/react";
 
-import {
-  ChainCard,
-  WalletSection,
-} from '../components';
-import { useBalances } from '../hooks/useBalances';
-import { useState } from 'react';
-import { useAA } from '../hooks/useAA';
-import { useCreateAA } from '../hooks/useCreateAA';
-import { AbstractAccountSection } from '../components/abstr';
-import { AccountInfoType } from '../hooks/types';
-import { defaultChainName } from '../config';
-
+import { ChainCard, WalletSection } from "../components";
+import { useBalances } from "../hooks/useBalances";
+import { useState } from "react";
+import { useAA } from "../hooks/useAA";
+import { useCreateAA } from "../hooks/useCreateAA";
+import { AbstractAccountSection } from "../components/abstr";
+import { AccountInfoType } from "../hooks/types";
+import { defaultChainName } from "../config";
 
 export default function Home() {
   const { colorMode, toggleColorMode } = useColorMode();
 
-  const { chainRecords, getChainLogo } = useManager();
+  const { getChainLogo } = useManager();
   const { chain: chainInfo } = useChain(defaultChainName);
 
-  const [txHash, setTxHash] = useState<string>(''); 
+  const [txHash, setTxHash] = useState<string>("");
 
   const chain = {
     chainName: defaultChainName,
@@ -38,9 +28,19 @@ export default function Home() {
     icon: getChainLogo(defaultChainName),
   };
 
-  const { handleCreateAA, contractAddress } = useCreateAA(setTxHash)
-  const { accountInfo, isGuardian, contractAddressLocal, handleRecover, handleRevoke } = useAA(contractAddress, txHash, setTxHash);
-  const { balance, accountBalance, handleSend, handleSendAA } = useBalances(contractAddressLocal, txHash, setTxHash);
+  const { handleCreateAA, contractAddress } = useCreateAA(setTxHash);
+  const {
+    accountInfo,
+    isGuardian,
+    contractAddressLocal,
+    handleRecover,
+    handleRevoke,
+  } = useAA(contractAddress, txHash, setTxHash);
+  const { balance, accountBalance, handleSend, handleSendAA } = useBalances(
+    contractAddressLocal,
+    txHash,
+    setTxHash,
+  );
 
   return (
     <Container maxW="5xl" py={2}>
@@ -52,13 +52,16 @@ export default function Home() {
       <Flex justifyContent="end" mb={4}>
         <Button variant="outline" px={0} onClick={toggleColorMode}>
           <Icon
-            as={colorMode === 'light' ? BsFillMoonStarsFill : BsFillSunFill}
+            as={colorMode === "light" ? BsFillMoonStarsFill : BsFillSunFill}
           />
         </Button>
-        <Button variant="outline" px={0} ml={2} onClick={() => window.location.href = "/"}>
-          <Icon
-            as={FaHome}
-          />
+        <Button
+          variant="outline"
+          px={0}
+          ml={2}
+          onClick={() => (window.location.href = "/")}
+        >
+          <Icon as={FaHome} />
         </Button>
       </Flex>
       <Flex>
@@ -68,18 +71,18 @@ export default function Home() {
         />
       </Flex>
       <Flex justifyContent="center" alignItems="start">
-        <AbstractAccountSection 
-          info={accountInfo as AccountInfoType} 
+        <AbstractAccountSection
+          info={accountInfo as AccountInfoType}
           isGuardian={isGuardian}
-          accountBalance={accountBalance} 
-          address={contractAddressLocal} 
+          accountBalance={accountBalance}
+          address={contractAddressLocal}
           handleRecover={handleRecover}
           handleRevoke={handleRevoke}
         />
-        <WalletSection 
+        <WalletSection
           isMultiChain={false}
           balance={balance}
-          contractAddress={contractAddressLocal} 
+          contractAddress={contractAddressLocal}
           handleCreate={handleCreateAA}
           handleSend={handleSend}
           handleSendAA={handleSendAA}

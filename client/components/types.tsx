@@ -1,6 +1,6 @@
-import { MouseEventHandler, ReactNode, RefObject } from 'react';
-import { IconType } from 'react-icons';
-import { CreateAccountType } from '../hooks/types';
+import { MouseEventHandler, ReactNode, RefObject } from "react";
+import { IconType } from "react-icons";
+import { CreateAccountType } from "../hooks/types";
 
 export interface ChooseChainInfo {
   chainName: string;
@@ -12,11 +12,11 @@ export interface ChooseChainInfo {
 }
 
 export enum WalletStatus {
-  NotInit = 'NotInit',
-  Loading = 'Loading',
-  Loaded = 'Loaded',
-  NotExist = 'NotExist',
-  Rejected = 'Rejected',
+  NotInit = "NotInit",
+  Loading = "Loading",
+  Loaded = "Loaded",
+  NotExist = "NotExist",
+  Rejected = "Rejected",
 }
 
 export enum TransactionResult {
@@ -36,8 +36,14 @@ export interface SendType {
   buttonText?: string;
   isDisabled?: boolean;
   contractAddress?: string;
-  handleSend?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
-  handleSendAA?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
+  handleSend?: (
+    amount: string | undefined,
+    recipient: string | undefined,
+  ) => Promise<void>;
+  handleSendAA?: (
+    amount: string | undefined,
+    recipient: string | undefined,
+  ) => Promise<void>;
 }
 
 export interface CreateAAType {
@@ -128,5 +134,5 @@ export interface MyValidator {
 }
 
 export type ImageSource = {
-  imageSource: 'cosmostation' | 'keybase';
+  imageSource: "cosmostation" | "keybase";
 };

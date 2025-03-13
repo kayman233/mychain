@@ -5,12 +5,12 @@ import {
   Text,
   useClipboard,
   useColorMode,
-  Image
+  Image,
 } from "@chakra-ui/react";
 import { WalletStatus } from "@cosmos-kit/core";
-import { FaCheckCircle } from 'react-icons/fa';
-import { FiCopy } from 'react-icons/fi';
-import React, { ReactNode, useEffect,useState } from "react";
+import { FaCheckCircle } from "react-icons/fa";
+import { FiCopy } from "react-icons/fi";
+import React, { ReactNode, useEffect, useState } from "react";
 
 import { CopyAddressType } from "../types";
 
@@ -19,24 +19,24 @@ const SIZES = {
     height: 12,
     walletImageSize: 7,
     icon: 5,
-    fontSize: 'md',
+    fontSize: "md",
   },
   md: {
     height: 10,
     walletImageSize: 6,
     icon: 4,
-    fontSize: 'sm',
+    fontSize: "sm",
   },
   sm: {
     height: 7,
     walletImageSize: 5,
     icon: 3.5,
-    fontSize: 'sm',
+    fontSize: "sm",
   },
 };
 
 export function stringTruncateFromCenter(str: string, maxLength: number) {
-  const midChar = '…'; // character to insert into the center of the result
+  const midChar = "…"; // character to insert into the center of the result
 
   if (str.length <= maxLength) return str;
 
@@ -52,24 +52,24 @@ export function stringTruncateFromCenter(str: string, maxLength: number) {
 export function handleChangeColorModeValue(
   colorMode: string,
   light: string,
-  dark: string
+  dark: string,
 ) {
-  if (colorMode === 'light') return light;
-  if (colorMode === 'dark') return dark;
+  if (colorMode === "light") return light;
+  if (colorMode === "dark") return dark;
 }
-
 
 export const ConnectedShowAddress = ({
   address,
   walletIcon,
   isLoading,
   isRound,
-  size = 'md',
+  size = "md",
   maxDisplayLength,
 }: CopyAddressType) => {
-  const { hasCopied, onCopy } = useClipboard(address ? address : '');
-  const [displayAddress, setDisplayAddress] = useState('');
+  const { hasCopied, onCopy } = useClipboard(address ? address : "");
+  const [displayAddress, setDisplayAddress] = useState("");
   const { colorMode } = useColorMode();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const defaultMaxLength = {
     lg: 14,
     md: 16,
@@ -77,17 +77,17 @@ export const ConnectedShowAddress = ({
   };
 
   useEffect(() => {
-    if (!address) setDisplayAddress('address not identified yet');
+    if (!address) setDisplayAddress("address not identified yet");
     if (address && maxDisplayLength)
       setDisplayAddress(stringTruncateFromCenter(address, maxDisplayLength));
     if (address && !maxDisplayLength)
       setDisplayAddress(
         stringTruncateFromCenter(
           address,
-          defaultMaxLength[size as keyof typeof defaultMaxLength]
-        )
+          defaultMaxLength[size as keyof typeof defaultMaxLength],
+        ),
       );
-  }, [address]);
+  }, [address, defaultMaxLength, maxDisplayLength, size]);
 
   return (
     <Button
@@ -96,12 +96,12 @@ export const ConnectedShowAddress = ({
       display="flex"
       alignItems="center"
       justifyContent="center"
-      borderRadius={isRound ? 'full' : 'lg'}
+      borderRadius={isRound ? "full" : "lg"}
       border="1px solid"
       borderColor={handleChangeColorModeValue(
         colorMode,
-        'gray.200',
-        'whiteAlpha.300'
+        "gray.200",
+        "whiteAlpha.300",
       )}
       w="full"
       h={SIZES[size as keyof typeof SIZES].height}
@@ -110,30 +110,30 @@ export const ConnectedShowAddress = ({
       pr={2}
       color={handleChangeColorModeValue(
         colorMode,
-        'gray.700',
-        'whiteAlpha.600'
+        "gray.700",
+        "whiteAlpha.600",
       )}
       transition="all .3s ease-in-out"
-      isDisabled={!address && true}
+      isDisabled={!address}
       isLoading={isLoading}
       _hover={{
-        bg: 'rgba(142, 142, 142, 0.05)',
+        bg: "rgba(142, 142, 142, 0.05)",
       }}
       _focus={{
-        outline: 'none',
+        outline: "none",
       }}
       _disabled={{
         opacity: 0.6,
-        cursor: 'not-allowed',
-        borderColor: 'rgba(142, 142, 142, 0.1)',
+        cursor: "not-allowed",
+        borderColor: "rgba(142, 142, 142, 0.1)",
         _hover: {
-          bg: 'transparent',
+          bg: "transparent",
         },
         _active: {
-          outline: 'none',
+          outline: "none",
         },
         _focus: {
-          outline: 'none',
+          outline: "none",
         },
       }}
       onClick={onCopy}
@@ -170,11 +170,11 @@ export const ConnectedShowAddress = ({
           opacity={0.9}
           color={
             hasCopied
-              ? 'green.400'
+              ? "green.400"
               : handleChangeColorModeValue(
                   colorMode,
-                  'gray.500',
-                  'whiteAlpha.400'
+                  "gray.500",
+                  "whiteAlpha.400",
                 )
           }
         />

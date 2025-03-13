@@ -1,4 +1,4 @@
-import { useChain } from '@cosmos-kit/react';
+import { useChain } from "@cosmos-kit/react";
 import {
   Box,
   Center,
@@ -7,10 +7,10 @@ import {
   Icon,
   Stack,
   useColorMode,
-} from '@chakra-ui/react';
+} from "@chakra-ui/react";
 import { WalletStatus } from "@cosmos-kit/core";
-import { MouseEventHandler, useEffect } from 'react';
-import { FiAlertTriangle } from 'react-icons/fi';
+import { MouseEventHandler, useEffect } from "react";
+import { FiAlertTriangle } from "react-icons/fi";
 import {
   Astronaut,
   Error,
@@ -26,13 +26,13 @@ import {
   RejectedWarn,
   WalletConnectComponent,
   ConnectWalletButton,
-} from '../components';
-import { defaultChainName } from '../config';
-import { ChainName } from '@cosmos-kit/core';
-import { ConnectedUserBalanceInfo } from './react/user-balance';
-import { CreateAAButton } from './react/create-aa';
-import { CreateAccountType } from '../hooks/types';
-import { SendButton } from './react/send';
+} from "../components";
+import { defaultChainName } from "../config";
+import { ChainName } from "@cosmos-kit/core";
+import { ConnectedUserBalanceInfo } from "./react/user-balance";
+import { CreateAAButton } from "./react/create-aa";
+import { CreateAccountType } from "../hooks/types";
+import { SendButton } from "./react/send";
 
 export const WalletSection = ({
   isMultiChain,
@@ -47,21 +47,20 @@ export const WalletSection = ({
   isMultiChain: boolean;
   balance?: string;
   providedChainName?: ChainName;
-  contractAddress?: string,
+  contractAddress?: string;
   handleCreate?: (params: CreateAccountType) => Promise<void>;
   setChainName?: (chainName: ChainName | undefined) => void;
-  handleSend?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
-  handleSendAA?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
+  handleSend?: (
+    amount: string | undefined,
+    recipient: string | undefined,
+  ) => Promise<void>;
+  handleSendAA?: (
+    amount: string | undefined,
+    recipient: string | undefined,
+  ) => Promise<void>;
 }) => {
-  const {
-    connect,
-    openView,
-    status,
-    username,
-    address,
-    message,
-    wallet,
-  } = useChain(providedChainName || defaultChainName);
+  const { connect, openView, status, username, address, message, wallet } =
+    useChain(providedChainName || defaultChainName);
   const { colorMode } = useColorMode();
 
   // Events
@@ -84,7 +83,7 @@ export const WalletSection = ({
       }
       connecting={<Connecting />}
       connected={
-        <Connected buttonText={'My Wallet'} onClick={onClickOpenView} />
+        <Connected buttonText={"My Wallet"} onClick={onClickOpenView} />
       }
       rejected={<Rejected buttonText="Reconnect" onClick={onClickConnect} />}
       error={<Error buttonText="Change Wallet" onClick={onClickOpenView} />}
@@ -113,7 +112,7 @@ export const WalletSection = ({
   );
 
   useEffect(() => {
-    setChainName?.(window.localStorage.getItem('selected-chain') || 'osmosis');
+    setChainName?.(window.localStorage.getItem("selected-chain") || "osmosis");
   }, [setChainName]);
 
   const userInfo = username && (
@@ -121,19 +120,22 @@ export const WalletSection = ({
   );
   const userBalance = status === WalletStatus.Connected && balance && (
     <ConnectedUserBalanceInfo balance={balance} />
-  )
+  );
   const createBtn = (
-    <CreateAAButton isDisabled={status !== WalletStatus.Connected} handleCreate={handleCreate} />
-  )
+    <CreateAAButton
+      isDisabled={status !== WalletStatus.Connected}
+      handleCreate={handleCreate}
+    />
+  );
 
   const sendBtn = (
-    <SendButton 
-      isDisabled={status !== WalletStatus.Connected} 
-      handleSend={handleSend} 
+    <SendButton
+      isDisabled={status !== WalletStatus.Connected}
+      handleSend={handleSend}
       handleSendAA={handleSendAA}
       contractAddress={contractAddress}
     />
-  )
+  );
 
   const addressBtn = (
     <CopyAddressBtn
@@ -153,18 +155,18 @@ export const WalletSection = ({
         justifyContent="center"
       >
         {!providedChainName && isMultiChain ? (
-          <ConnectWalletButton buttonText={'Connect Wallet'} isDisabled />
+          <ConnectWalletButton buttonText={"Connect Wallet"} isDisabled />
         ) : (
           <GridItem px={6}>
             <Stack
               justifyContent="center"
               alignItems="center"
               borderRadius="lg"
-              bg={colorMode === 'light' ? 'white' : 'blackAlpha.400'}
+              bg={colorMode === "light" ? "white" : "blackAlpha.400"}
               boxShadow={
-                colorMode === 'light'
-                  ? '0 0 2px #dfdfdf, 0 0 6px -2px #d3d3d3'
-                  : '0 0 2px #363636, 0 0 8px -2px #4f4f4f'
+                colorMode === "light"
+                  ? "0 0 2px #dfdfdf, 0 0 6px -2px #d3d3d3"
+                  : "0 0 2px #363636, 0 0 8px -2px #4f4f4f"
               }
               spacing={4}
               px={4}
@@ -179,7 +181,7 @@ export const WalletSection = ({
               <Box w="full" maxW={{ base: 52, md: 64 }}>
                 {createBtn}
               </Box>
-              <Box w="full" maxW={{ base: 52, md: 64 }} >
+              <Box w="full" maxW={{ base: 52, md: 64 }}>
                 {sendBtn}
               </Box>
               {connectWalletWarn && <GridItem>{connectWalletWarn}</GridItem>}

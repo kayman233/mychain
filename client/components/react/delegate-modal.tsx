@@ -1,5 +1,5 @@
-import { ChangeEvent, ReactElement, useState } from 'react';
-import { Token } from './stats';
+import { ChangeEvent, ReactElement, useState } from "react";
+import { Token } from "./stats";
 import {
   Flex,
   Heading,
@@ -23,8 +23,8 @@ import {
   useColorModeValue,
   useToast,
   Center,
-} from '@chakra-ui/react';
-import { TransactionResult } from '../types';
+} from "@chakra-ui/react";
+import { TransactionResult } from "../types";
 
 export const ValidatorInfo = ({
   imgUrl,
@@ -140,31 +140,29 @@ export const StatBox = ({
   number?: number;
   input?: ReactElement;
   token: string;
-}) => {
-  return (
-    <Box
-      borderRadius={10}
-      bgColor={useColorModeValue('gray.50', 'gray.600')}
-      border="1px solid"
-      borderColor="blackAlpha.200"
-      width="100%"
-      padding="30px 40px"
-      display="flex"
-      alignItems="center"
-    >
-      <Stat>
-        <StatLabel>{label}</StatLabel>
-        {input ? (
-          input
-        ) : (
-          <StatNumber>
-            {number} <Token color="blackAlpha.800" token={token} />
-          </StatNumber>
-        )}
-      </Stat>
-    </Box>
-  );
-};
+}) => (
+  <Box
+    borderRadius={10}
+    bgColor={useColorModeValue("gray.50", "gray.600")}
+    border="1px solid"
+    borderColor="blackAlpha.200"
+    width="100%"
+    padding="30px 40px"
+    display="flex"
+    alignItems="center"
+  >
+    <Stat>
+      <StatLabel>{label}</StatLabel>
+      {input ? (
+        input
+      ) : (
+        <StatNumber>
+          {number} <Token color="blackAlpha.800" token={token} />
+        </StatNumber>
+      )}
+    </Stat>
+  </Box>
+);
 
 export const InputBox = ({
   label,
@@ -197,7 +195,7 @@ export const InputBox = ({
             colorScheme="cyan"
             fontWeight="bold"
             onClick={onMaxClick}
-            _hover={{ cursor: 'pointer' }}
+            _hover={{ cursor: "pointer" }}
           >
             MAX
           </Tag>
@@ -211,7 +209,7 @@ export const InputBox = ({
 );
 
 export const useInputBox = (maxAmount?: number) => {
-  const [amount, setAmount] = useState<number | string>('');
+  const [amount, setAmount] = useState<number | string>("");
   const [max, setMax] = useState<number>(maxAmount || 0);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -220,25 +218,23 @@ export const useInputBox = (maxAmount?: number) => {
       return;
     }
 
-    if (e.target.value === '') {
-      setAmount('');
+    if (e.target.value === "") {
+      setAmount("");
       return;
     }
 
     setAmount(+Number(e.target.value).toFixed(6));
   };
 
-  const renderInputBox = (label: string, token: string) => {
-    return (
-      <InputBox
-        label={label}
-        token={token}
-        value={amount}
-        onChange={(e) => handleInputChange(e)}
-        onMaxClick={() => setAmount(max)}
-      />
-    );
-  };
+  const renderInputBox = (label: string, token: string) => (
+    <InputBox
+      label={label}
+      token={token}
+      value={amount}
+      onChange={(e) => handleInputChange(e)}
+      onMaxClick={() => setAmount(max)}
+    />
+  );
 
   return { renderInputBox, amount, setAmount, setMax };
 };
@@ -248,13 +244,11 @@ export const useTransactionToast = () => {
 
   const showToast = (code: number) => {
     toast({
-      title: `Transaction ${
-        code === TransactionResult.Success ? 'successful' : 'failed'
-      }`,
-      status: code === TransactionResult.Success ? 'success' : 'error',
+      title: `Transaction ${code === TransactionResult.Success ? "successful" : "failed"}`,
+      status: code === TransactionResult.Success ? "success" : "error",
       duration: 3000,
       isClosable: true,
-      position: 'top-right',
+      position: "top-right",
     });
   };
 

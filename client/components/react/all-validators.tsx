@@ -1,5 +1,5 @@
-import { Token } from './stats';
-import { IoArrowForward } from 'react-icons/io5';
+import { Token } from "./stats";
+import { IoArrowForward } from "react-icons/io5";
 import {
   Heading,
   Table,
@@ -25,7 +25,7 @@ import {
   Image,
   useColorMode,
   Center,
-} from '@chakra-ui/react';
+} from "@chakra-ui/react";
 import {
   DelegateWarning,
   StatBox,
@@ -33,19 +33,19 @@ import {
   useTransactionToast,
   ValidatorDesc,
   ValidatorInfo,
-} from './delegate-modal';
-import { useState } from 'react';
-import { exponentiate, getExponent } from './staking';
-import { useChain } from '@cosmos-kit/react';
-import { cosmos } from 'interchain';
-import { getCoin } from '../../config';
-import { StdFee } from '@cosmjs/amino';
+} from "./delegate-modal";
+import { useState } from "react";
+import { exponentiate, getExponent } from "./staking";
+import { useChain } from "@cosmos-kit/react";
+import { cosmos } from "interchain";
+import { getCoin } from "../../config";
+import { StdFee } from "@cosmjs/amino";
 import type {
   Validator,
   DelegationResponse as Delegation,
-} from 'interchain/types/codegen/cosmos/staking/v1beta1/staking';
-import { TransactionResult } from '../types';
-import { ChainName } from '@cosmos-kit/core';
+} from "interchain/types/codegen/cosmos/staking/v1beta1/staking";
+import { TransactionResult } from "../types";
+import { ChainName } from "@cosmos-kit/core";
 
 export const Thumbnail = ({
   identity,
@@ -55,25 +55,23 @@ export const Thumbnail = ({
   identity: string | undefined;
   name: string | undefined;
   thumbnailUrl: string;
-}) => {
-  return (
-    <>
-      {identity && thumbnailUrl ? (
-        <Image
-          borderRadius="full"
-          boxSize="30px"
-          src={thumbnailUrl}
-          alt={name}
-          mr={2}
-        />
-      ) : (
-        <Center boxSize="30px" bgColor="gray.200" borderRadius="full" mr={2}>
-          {name && name.trim().slice(0, 1).toUpperCase()}
-        </Center>
-      )}
-    </>
-  );
-};
+}) => (
+  <>
+    {identity && thumbnailUrl ? (
+      <Image
+        borderRadius="full"
+        boxSize="30px"
+        src={thumbnailUrl}
+        alt={name}
+        mr={2}
+      />
+    ) : (
+      <Center boxSize="30px" bgColor="gray.200" borderRadius="full" mr={2}>
+        {name && name.trim().slice(0, 1).toUpperCase()}
+      </Center>
+    )}
+  </>
+);
 
 const AllValidators = ({
   validators,
@@ -108,7 +106,7 @@ const AllValidators = ({
 
   const getDelegation = (validatorAddr: string, delegations: Delegation[]) => {
     const delegation = delegations.filter(
-      (d) => d?.delegation?.validatorAddress === validatorAddr
+      (d) => d?.delegation?.validatorAddress === validatorAddr,
     );
 
     if (delegation.length === 1) {
@@ -119,7 +117,7 @@ const AllValidators = ({
   };
 
   const onModalClose = () => {
-    setAmount('');
+    setAmount("");
     setIsDelegating(false);
     onClose();
   };
@@ -130,7 +128,7 @@ const AllValidators = ({
     const stargateClient = await getSigningStargateClient();
 
     if (!stargateClient || !address || !currentValidator?.operatorAddress) {
-      console.error('stargateClient undefined or address undefined.');
+      console.error("stargateClient undefined or address undefined.");
       return;
     }
 
@@ -151,17 +149,17 @@ const AllValidators = ({
       amount: [
         {
           denom: coin.base,
-          amount: '1000',
+          amount: "1000",
         },
       ],
-      gas: '205559',
+      gas: "205559",
     };
 
     try {
       const { code } = await stargateClient.signAndBroadcast(
         address,
         [msg],
-        fee
+        fee,
       );
 
       stargateClient.disconnect();
@@ -197,21 +195,21 @@ const AllValidators = ({
               imgUrl={
                 currentValidator
                   ? thumbnails[currentValidator?.operatorAddress]
-                  : ''
+                  : ""
               }
-              name={currentValidator?.description?.moniker || ''}
+              name={currentValidator?.description?.moniker || ""}
               commission={
                 currentValidator?.commission?.commissionRates?.rate
                   ? exponentiate(
                       currentValidator.commission.commissionRates.rate,
-                      -16
+                      -16,
                     ).toFixed(0)
                   : 0
               }
               apr={22.08}
             />
             <ValidatorDesc
-              description={currentValidator?.description?.details || ''}
+              description={currentValidator?.description?.details || ""}
             />
             <DelegateWarning unbondingDays={unbondingDays} />
             <Stack direction="row" spacing={4} my={4}>
@@ -219,8 +217,8 @@ const AllValidators = ({
                 label="Your Delegation"
                 token={coin.symbol}
                 number={getDelegation(
-                  currentValidator?.operatorAddress || '',
-                  delegations
+                  currentValidator?.operatorAddress || "",
+                  delegations,
                 )}
               />
               <StatBox
@@ -229,7 +227,7 @@ const AllValidators = ({
                 token={coin.symbol}
               />
             </Stack>
-            {renderInputBox('Amount to Delegate', coin.symbol)}
+            {renderInputBox("Amount to Delegate", coin.symbol)}
           </ModalBody>
 
           <ModalFooter>
@@ -277,7 +275,7 @@ const AllValidators = ({
                 </Td>
                 <Td>
                   {Math.floor(
-                    exponentiate(validator.tokens, -exp)
+                    exponentiate(validator.tokens, -exp),
                   ).toLocaleString()}
                   &nbsp;
                   <Token color="blackAlpha.800" token={coin.symbol} />
@@ -286,7 +284,7 @@ const AllValidators = ({
                   {validator.commission?.commissionRates?.rate &&
                     exponentiate(
                       validator.commission.commissionRates.rate,
-                      -16
+                      -16,
                     ).toFixed(0)}
                   %
                 </Td>
@@ -302,7 +300,7 @@ const AllValidators = ({
                         setCurrentValidator(validator);
                       }}
                       color={
-                        colorMode === 'light' ? 'purple.600' : 'purple.200'
+                        colorMode === "light" ? "purple.600" : "purple.200"
                       }
                     >
                       Manage

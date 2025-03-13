@@ -21,9 +21,9 @@ import {
   useDisclosure,
   Text,
   useColorMode,
-} from '@chakra-ui/react';
-import { Token } from './stats';
-import { IoArrowForward } from 'react-icons/io5';
+} from "@chakra-ui/react";
+import { Token } from "./stats";
+import { IoArrowForward } from "react-icons/io5";
 import {
   ValidatorInfo,
   ValidatorDesc,
@@ -32,21 +32,21 @@ import {
   UndelegateWarning,
   useInputBox,
   useTransactionToast,
-} from './delegate-modal';
-import { exponentiate, getExponent } from './staking';
-import { decodeCosmosSdkDecFromProto, StdFee } from '@cosmjs/stargate';
-import { useState } from 'react';
-import { cosmos } from 'interchain';
-import { useChain } from '@cosmos-kit/react';
-import { getCoin } from '../../config';
-import { MyValidator, TransactionResult } from '../types';
+} from "./delegate-modal";
+import { exponentiate, getExponent } from "./staking";
+import { decodeCosmosSdkDecFromProto, StdFee } from "@cosmjs/stargate";
+import { useState } from "react";
+import { cosmos } from "interchain";
+import { useChain } from "@cosmos-kit/react";
+import { getCoin } from "../../config";
+import { MyValidator, TransactionResult } from "../types";
 import type {
   Validator,
   DelegationResponse as Delegation,
-} from 'interchain/types/codegen/cosmos/staking/v1beta1/staking';
-import type { DelegationDelegatorReward as Reward } from 'interchain/types/codegen/cosmos/distribution/v1beta1/distribution';
-import { ChainName } from '@cosmos-kit/core';
-import { Thumbnail } from './all-validators';
+} from "interchain/types/codegen/cosmos/staking/v1beta1/staking";
+import type { DelegationDelegatorReward as Reward } from "interchain/types/codegen/cosmos/distribution/v1beta1/distribution";
+import { ChainName } from "@cosmos-kit/core";
+import { Thumbnail } from "./all-validators";
 
 const MyValidators = ({
   validators,
@@ -137,20 +137,20 @@ const MyValidators = ({
 
   const myValidators = validators.map((validator: Validator) => {
     const delegation = delegations.filter(
-      (d) => d?.delegation?.validatorAddress === validator?.operatorAddress
+      (d) => d?.delegation?.validatorAddress === validator?.operatorAddress,
     )[0];
 
     const delegatorReward = rewards.filter(
-      (r) => r.validatorAddress === validator?.operatorAddress
+      (r) => r.validatorAddress === validator?.operatorAddress,
     )[0];
 
     const reward = delegatorReward.reward.find(
-      (item) => item.denom === coin.base
+      (item) => item.denom === coin.base,
     );
 
     const rewardAmount =
       delegatorReward.reward.length > 0
-        ? decodeCosmosSdkDecFromProto(reward ? reward.amount : '0').toString()
+        ? decodeCosmosSdkDecFromProto(reward ? reward.amount : "0").toString()
         : 0;
 
     return {
@@ -165,19 +165,19 @@ const MyValidators = ({
   });
 
   const closeDelegateModal = () => {
-    setDelegateAmount('');
+    setDelegateAmount("");
     setIsDelegating(false);
     onDelegateModalClose();
   };
 
   const closeUndelegateModal = () => {
-    setUndelegateAmount('');
+    setUndelegateAmount("");
     setIsUndelegating(false);
     onUndelegateModalClose();
   };
 
   const closeRedelegateModal = () => {
-    setRedelegateAmount('');
+    setRedelegateAmount("");
     setIsRedelegating(false);
     onRedelegateModalClose();
   };
@@ -188,7 +188,7 @@ const MyValidators = ({
     const stargateClient = await getSigningStargateClient();
 
     if (!stargateClient || !address || !currentValidator?.address) {
-      console.error('stargateClient undefined or address undefined.');
+      console.error("stargateClient undefined or address undefined.");
       return;
     }
 
@@ -209,17 +209,17 @@ const MyValidators = ({
       amount: [
         {
           denom: coin.base,
-          amount: '1000',
+          amount: "1000",
         },
       ],
-      gas: '205559',
+      gas: "205559",
     };
 
     try {
       const { code } = await stargateClient.signAndBroadcast(
         address,
         [msg],
-        fee
+        fee,
       );
 
       stargateClient.disconnect();
@@ -246,7 +246,7 @@ const MyValidators = ({
     const stargateClient = await getSigningStargateClient();
 
     if (!stargateClient || !address || !currentValidator?.address) {
-      console.error('stargateClient undefined or address undefined.');
+      console.error("stargateClient undefined or address undefined.");
       return;
     }
 
@@ -270,17 +270,17 @@ const MyValidators = ({
       amount: [
         {
           denom: coin.base,
-          amount: '1000',
+          amount: "1000",
         },
       ],
-      gas: '238125',
+      gas: "238125",
     };
 
     try {
       const { code } = await stargateClient.signAndBroadcast(
         address,
         [msg],
-        fee
+        fee,
       );
 
       stargateClient.disconnect();
@@ -311,7 +311,7 @@ const MyValidators = ({
       !currentValidator?.address ||
       !selectedValidator?.operatorAddress
     ) {
-      console.error('stargateClient undefined or address undefined.');
+      console.error("stargateClient undefined or address undefined.");
       return;
     }
 
@@ -337,17 +337,17 @@ const MyValidators = ({
       amount: [
         {
           denom: coin.base,
-          amount: '1000',
+          amount: "1000",
         },
       ],
-      gas: '355188',
+      gas: "355188",
     };
 
     try {
       const { code } = await stargateClient.signAndBroadcast(
         address,
         [msg],
-        fee
+        fee,
       );
 
       stargateClient.disconnect();
@@ -386,9 +386,9 @@ const MyValidators = ({
           <ModalBody>
             <ValidatorInfo
               imgUrl={
-                currentValidator ? thumbnails[currentValidator.address] : ''
+                currentValidator ? thumbnails[currentValidator.address] : ""
               }
-              name={currentValidator?.name || ''}
+              name={currentValidator?.name || ""}
               commission={
                 currentValidator?.commission
                   ? exponentiate(currentValidator.commission, -16).toFixed(0)
@@ -396,7 +396,7 @@ const MyValidators = ({
               }
               apr={22.08}
             />
-            <ValidatorDesc description={currentValidator?.details || ''} />
+            <ValidatorDesc description={currentValidator?.details || ""} />
 
             <StatBox
               label="Your Delegation"
@@ -440,9 +440,9 @@ const MyValidators = ({
           <ModalBody>
             <ValidatorInfo
               imgUrl={
-                currentValidator ? thumbnails[currentValidator.address] : ''
+                currentValidator ? thumbnails[currentValidator.address] : ""
               }
-              name={currentValidator?.name || ''}
+              name={currentValidator?.name || ""}
               commission={
                 currentValidator?.commission
                   ? exponentiate(currentValidator.commission, -16).toFixed(0)
@@ -463,7 +463,7 @@ const MyValidators = ({
                 token={coin.symbol}
               />
             </Stack>
-            {renderDelegateInputBox('Amount to Delegate', coin.symbol)}
+            {renderDelegateInputBox("Amount to Delegate", coin.symbol)}
           </ModalBody>
 
           <ModalFooter>
@@ -493,9 +493,9 @@ const MyValidators = ({
           <ModalBody>
             <ValidatorInfo
               imgUrl={
-                currentValidator ? thumbnails[currentValidator.address] : ''
+                currentValidator ? thumbnails[currentValidator.address] : ""
               }
-              name={currentValidator?.name || ''}
+              name={currentValidator?.name || ""}
               commission={
                 currentValidator?.commission
                   ? exponentiate(currentValidator.commission, -16).toFixed(0)
@@ -510,7 +510,7 @@ const MyValidators = ({
                 number={currentValidator?.staked}
                 token={coin.symbol}
               />
-              {renderUndelegateInputBox('Amount to Undelegate', coin.symbol)}
+              {renderUndelegateInputBox("Amount to Undelegate", coin.symbol)}
             </Stack>
           </ModalBody>
 
@@ -560,8 +560,8 @@ const MyValidators = ({
                       }}
                       _hover={{
                         background:
-                          colorMode === 'light' ? 'gray.100' : 'gray.800',
-                        cursor: 'pointer',
+                          colorMode === "light" ? "gray.100" : "gray.800",
+                        cursor: "pointer",
                       }}
                     >
                       <Td>
@@ -582,7 +582,7 @@ const MyValidators = ({
                       </Td>
                       <Td>
                         {Math.floor(
-                          exponentiate(validator.tokens, -exp)
+                          exponentiate(validator.tokens, -exp),
                         ).toLocaleString()}
                         &nbsp;
                         <Token color="blackAlpha.800" token={coin.symbol} />
@@ -591,7 +591,7 @@ const MyValidators = ({
                         {validator.commission?.commissionRates?.rate &&
                           exponentiate(
                             validator.commission.commissionRates.rate,
-                            -16
+                            -16,
                           ).toFixed(0)}
                         %
                       </Td>
@@ -639,7 +639,7 @@ const MyValidators = ({
                 {selectedValidator?.description?.moniker}
               </Text>
             </Stack>
-            {renderRedelegateInputBox('Amount to Redelegate', coin.symbol)}
+            {renderRedelegateInputBox("Amount to Redelegate", coin.symbol)}
           </ModalBody>
 
           <ModalFooter>
@@ -703,7 +703,7 @@ const MyValidators = ({
                         onValidatorModalOpen();
                       }}
                       color={
-                        colorMode === 'light' ? 'purple.600' : 'purple.200'
+                        colorMode === "light" ? "purple.600" : "purple.200"
                       }
                     >
                       Manage

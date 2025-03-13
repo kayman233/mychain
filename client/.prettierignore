@@ -1,0 +1,31 @@
+# Build artifacts
+.next/
+out/
+build/
+dist/
+
+codegen/
+# Dependencies
+node_modules/
+
+# Generated files
+*.generated.*
+generated/
+coverage/
+
+# Misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Package files
+package-lock.json
+yarn.lock
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log* 
