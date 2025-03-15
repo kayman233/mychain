@@ -1,10 +1,5 @@
 export const Astronaut = (props: any) => (
-  <svg
-    viewBox="0 0 278 255"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
+  <svg viewBox="0 0 278 255" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <path
       d="M136.844 254.8c70.527 0 127.7-57.039 127.7-127.4S207.371 0 136.844 0 9.144 57.039 9.144 127.4s57.173 127.4 127.7 127.4Z"
       fill="#030609"

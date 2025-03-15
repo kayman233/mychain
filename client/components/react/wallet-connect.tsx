@@ -1,9 +1,9 @@
-import React, { MouseEventHandler, ReactNode } from "react";
-import { Button, Icon, Stack, Text, useColorModeValue } from "@chakra-ui/react";
-import { IoWallet } from "react-icons/io5";
-import { ConnectWalletType } from "../types";
-import { FiAlertTriangle } from "react-icons/fi";
-import { WalletStatus } from "@cosmos-kit/core";
+import React, { MouseEventHandler, ReactNode } from 'react';
+import { Button, Icon, Stack, Text, useColorModeValue } from '@chakra-ui/react';
+import { IoWallet } from 'react-icons/io5';
+import { ConnectWalletType } from '../types';
+import { FiAlertTriangle } from 'react-icons/fi';
+import { WalletStatus } from '@cosmos-kit/core';
 
 export const ConnectWalletButton = ({
   buttonText,
@@ -23,19 +23,17 @@ export const ConnectWalletButton = ({
     opacity={1}
     transition="all .5s ease-in-out"
     _hover={{
-      bgImage:
-        "linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)",
+      bgImage: 'linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)',
       opacity: 0.75,
     }}
     _active={{
-      bgImage:
-        "linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)",
+      bgImage: 'linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)',
       opacity: 0.9,
     }}
     onClick={onClickConnectBtn}
   >
     <Icon as={icon ? icon : IoWallet} mr={2} />
-    {buttonText ? buttonText : "Connect Wallet"}
+    {buttonText ? buttonText : 'Connect Wallet'}
   </Button>
 );
 
@@ -45,9 +43,7 @@ export const Disconnected = ({
 }: {
   buttonText: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
-}) => (
-  <ConnectWalletButton buttonText={buttonText} onClickConnectBtn={onClick} />
-);
+}) => <ConnectWalletButton buttonText={buttonText} onClickConnectBtn={onClick} />;
 
 export const Connected = ({
   buttonText,
@@ -55,9 +51,7 @@ export const Connected = ({
 }: {
   buttonText: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
-}) => (
-  <ConnectWalletButton buttonText={buttonText} onClickConnectBtn={onClick} />
-);
+}) => <ConnectWalletButton buttonText={buttonText} onClickConnectBtn={onClick} />;
 
 export const Connecting = () => <ConnectWalletButton isLoading={true} />;
 
@@ -70,24 +64,13 @@ export const Rejected = ({
   wordOfWarning?: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }) => {
-  const bg = useColorModeValue("orange.200", "orange.300");
+  const bg = useColorModeValue('orange.200', 'orange.300');
 
   return (
     <Stack>
-      <ConnectWalletButton
-        buttonText={buttonText}
-        isDisabled={false}
-        onClickConnectBtn={onClick}
-      />
+      <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />
       {wordOfWarning && (
-        <Stack
-          isInline={true}
-          borderRadius="md"
-          bg={bg}
-          color="blackAlpha.900"
-          p={4}
-          spacing={1}
-        >
+        <Stack isInline={true} borderRadius="md" bg={bg} color="blackAlpha.900" p={4} spacing={1}>
           <Icon as={FiAlertTriangle} mt={1} />
           <Text>
             <Text fontWeight="semibold" as="span">
@@ -110,24 +93,13 @@ export const Error = ({
   wordOfWarning?: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }) => {
-  const bg = useColorModeValue("orange.200", "orange.300");
+  const bg = useColorModeValue('orange.200', 'orange.300');
 
   return (
     <Stack>
-      <ConnectWalletButton
-        buttonText={buttonText}
-        isDisabled={false}
-        onClickConnectBtn={onClick}
-      />
+      <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />
       {wordOfWarning && (
-        <Stack
-          isInline={true}
-          borderRadius="md"
-          bg={bg}
-          color="blackAlpha.900"
-          p={4}
-          spacing={1}
-        >
+        <Stack isInline={true} borderRadius="md" bg={bg} color="blackAlpha.900" p={4} spacing={1}>
           <Icon as={FiAlertTriangle} mt={1} />
           <Text>
             <Text fontWeight="semibold" as="span">
@@ -148,11 +120,7 @@ export const NotExist = ({
   buttonText: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }) => (
-  <ConnectWalletButton
-    buttonText={buttonText}
-    isDisabled={false}
-    onClickConnectBtn={onClick}
-  />
+  <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />
 );
 
 export const WalletConnectComponent = ({

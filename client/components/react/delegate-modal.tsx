@@ -1,5 +1,5 @@
-import { ChangeEvent, ReactElement, useState } from "react";
-import { Token } from "./stats";
+import { ChangeEvent, ReactElement, useState } from 'react';
+import { Token } from './stats';
 import {
   Flex,
   Heading,
@@ -23,8 +23,8 @@ import {
   useColorModeValue,
   useToast,
   Center,
-} from "@chakra-ui/react";
-import { TransactionResult } from "../types";
+} from '@chakra-ui/react';
+import { TransactionResult } from '../types';
 
 export const ValidatorInfo = ({
   imgUrl,
@@ -60,11 +60,7 @@ export const ValidatorDesc = ({ description }: { description: string }) => (
   <Text mb={4}>{description}</Text>
 );
 
-export const DelegateWarning = ({
-  unbondingDays,
-}: {
-  unbondingDays: number;
-}) => {
+export const DelegateWarning = ({ unbondingDays }: { unbondingDays: number }) => {
   if (!unbondingDays) return <></>;
 
   return (
@@ -83,18 +79,14 @@ export const DelegateWarning = ({
         </AlertTitle>
       </Flex>
       <AlertDescription fontSize="sm" color="red.400" lineHeight="short" mt={2}>
-        You will need to undelegate in order for your staked assets to be liquid
-        again. This process will take {unbondingDays} days to complete.
+        You will need to undelegate in order for your staked assets to be liquid again. This process
+        will take {unbondingDays} days to complete.
       </AlertDescription>
     </Alert>
   );
 };
 
-export const UndelegateWarning = ({
-  unbondingDays,
-}: {
-  unbondingDays: number;
-}) => {
+export const UndelegateWarning = ({ unbondingDays }: { unbondingDays: number }) => {
   if (!unbondingDays) return <></>;
 
   return (
@@ -107,23 +99,13 @@ export const UndelegateWarning = ({
     >
       <Flex>
         <AlertIcon />
-        <AlertTitle color="red.500">
-          Once the unbonding period begins you will:
-        </AlertTitle>
+        <AlertTitle color="red.500">Once the unbonding period begins you will:</AlertTitle>
       </Flex>
-      <AlertDescription
-        fontSize="sm"
-        color="red.400"
-        lineHeight="short"
-        mt={2}
-        ml={1}
-      >
+      <AlertDescription fontSize="sm" color="red.400" lineHeight="short" mt={2} ml={1}>
         <UnorderedList>
           <ListItem>not receive staking rewards</ListItem>
           <ListItem>not be able to cancel the unbonding</ListItem>
-          <ListItem>
-            need to wait {unbondingDays} days for the amount to be liquid
-          </ListItem>
+          <ListItem>need to wait {unbondingDays} days for the amount to be liquid</ListItem>
         </UnorderedList>
       </AlertDescription>
     </Alert>
@@ -143,7 +125,7 @@ export const StatBox = ({
 }) => (
   <Box
     borderRadius={10}
-    bgColor={useColorModeValue("gray.50", "gray.600")}
+    bgColor={useColorModeValue('gray.50', 'gray.600')}
     border="1px solid"
     borderColor="blackAlpha.200"
     width="100%"
@@ -183,19 +165,14 @@ export const InputBox = ({
     input={
       <InputGroup mt={2}>
         <Input type="number" value={value} onChange={onChange} />
-        <InputRightElement
-          mr={3}
-          width={24}
-          display="flex"
-          justifyContent="space-between"
-        >
+        <InputRightElement mr={3} width={24} display="flex" justifyContent="space-between">
           <Tag
             size="md"
             variant="solid"
             colorScheme="cyan"
             fontWeight="bold"
             onClick={onMaxClick}
-            _hover={{ cursor: "pointer" }}
+            _hover={{ cursor: 'pointer' }}
           >
             MAX
           </Tag>
@@ -209,7 +186,7 @@ export const InputBox = ({
 );
 
 export const useInputBox = (maxAmount?: number) => {
-  const [amount, setAmount] = useState<number | string>("");
+  const [amount, setAmount] = useState<number | string>('');
   const [max, setMax] = useState<number>(maxAmount || 0);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -218,8 +195,8 @@ export const useInputBox = (maxAmount?: number) => {
       return;
     }
 
-    if (e.target.value === "") {
-      setAmount("");
+    if (e.target.value === '') {
+      setAmount('');
       return;
     }
 
@@ -231,7 +208,7 @@ export const useInputBox = (maxAmount?: number) => {
       label={label}
       token={token}
       value={amount}
-      onChange={(e) => handleInputChange(e)}
+      onChange={e => handleInputChange(e)}
       onMaxClick={() => setAmount(max)}
     />
   );
@@ -244,11 +221,11 @@ export const useTransactionToast = () => {
 
   const showToast = (code: number) => {
     toast({
-      title: `Transaction ${code === TransactionResult.Success ? "successful" : "failed"}`,
-      status: code === TransactionResult.Success ? "success" : "error",
+      title: `Transaction ${code === TransactionResult.Success ? 'successful' : 'failed'}`,
+      status: code === TransactionResult.Success ? 'success' : 'error',
       duration: 3000,
       isClosable: true,
-      position: "top-right",
+      position: 'top-right',
     });
   };
 

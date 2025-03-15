@@ -6,22 +6,22 @@ import {
   Button,
   useColorModeValue,
   Text,
-} from "@chakra-ui/react";
-import { StdFee } from "@cosmjs/stargate";
-import { useChain } from "@cosmos-kit/react";
-import { useState } from "react";
-import { cosmos } from "interchain";
-import { getCoin } from "../../config";
-import type { DelegationDelegatorReward as Reward } from "interchain/types/codegen/cosmos/distribution/v1beta1/distribution";
-import { useTransactionToast } from "./delegate-modal";
-import { TransactionResult } from "../types";
-import { ChainName } from "@cosmos-kit/core";
+} from '@chakra-ui/react';
+import { StdFee } from '@cosmjs/stargate';
+import { useChain } from '@cosmos-kit/react';
+import { useState } from 'react';
+import { cosmos } from 'interchain';
+import { getCoin } from '../../config';
+import type { DelegationDelegatorReward as Reward } from 'interchain/types/codegen/cosmos/distribution/v1beta1/distribution';
+import { useTransactionToast } from './delegate-modal';
+import { TransactionResult } from '../types';
+import { ChainName } from '@cosmos-kit/core';
 
 export const Token = ({ token, color }: { token: string; color?: string }) => (
   <Text
     fontSize="sm"
     as="span"
-    color={useColorModeValue(color || "blackAlpha.600", "whiteAlpha.600")}
+    color={useColorModeValue(color || 'blackAlpha.600', 'whiteAlpha.600')}
   >
     {token}
   </Text>
@@ -55,36 +55,31 @@ const Stats = ({
     const stargateClient = await getSigningStargateClient();
 
     if (!stargateClient || !address) {
-      console.error("stargateClient undefined or address undefined.");
+      console.error('stargateClient undefined or address undefined.');
       return;
     }
 
-    const { withdrawDelegatorReward } =
-      cosmos.distribution.v1beta1.MessageComposer.fromPartial;
+    const { withdrawDelegatorReward } = cosmos.distribution.v1beta1.MessageComposer.fromPartial;
 
     const msgs = rewards.map(({ validatorAddress }) =>
       withdrawDelegatorReward({
         delegatorAddress: address,
         validatorAddress,
-      }),
+      })
     );
 
     const fee: StdFee = {
       amount: [
         {
           denom: getCoin(chainName).base,
-          amount: "1000",
+          amount: '1000',
         },
       ],
-      gas: "500000",
+      gas: '500000',
     };
 
     try {
-      const { code } = await stargateClient.signAndBroadcast(
-        address,
-        msgs,
-        fee,
-      );
+      const { code } = await stargateClient.signAndBroadcast(address, msgs, fee);
 
       stargateClient.disconnect();
 
@@ -103,7 +98,7 @@ const Stats = ({
     <StatGroup>
       <Stat py={2} minWidth="200px">
         <StatLabel
-          color={useColorModeValue("blackAlpha.600", "whiteAlpha.600")}
+          color={useColorModeValue('blackAlpha.600', 'whiteAlpha.600')}
           fontWeight="semibold"
           fontSize="md"
         >
@@ -117,7 +112,7 @@ const Stats = ({
 
       <Stat py={2} minWidth="200px">
         <StatLabel
-          color={useColorModeValue("blackAlpha.600", "whiteAlpha.600")}
+          color={useColorModeValue('blackAlpha.600', 'whiteAlpha.600')}
           fontWeight="semibold"
           fontSize="md"
         >
@@ -130,7 +125,7 @@ const Stats = ({
 
       <Stat py={2} minWidth="200px">
         <StatLabel
-          color={useColorModeValue("blackAlpha.600", "whiteAlpha.600")}
+          color={useColorModeValue('blackAlpha.600', 'whiteAlpha.600')}
           fontWeight="semibold"
           fontSize="md"
         >
@@ -146,12 +141,12 @@ const Stats = ({
         pos="relative"
         py={2}
         px={4}
-        bgColor={useColorModeValue("purple.50", "purple.700")}
+        bgColor={useColorModeValue('purple.50', 'purple.700')}
         borderRadius={10}
         minWidth="200px"
       >
         <StatLabel
-          color={useColorModeValue("blackAlpha.600", "whiteAlpha.600")}
+          color={useColorModeValue('blackAlpha.600', 'whiteAlpha.600')}
           fontWeight="semibold"
           fontSize="md"
         >
@@ -160,7 +155,7 @@ const Stats = ({
         <StatNumber>
           {totalReward}&nbsp;
           <Token
-            color={useColorModeValue("blackAlpha.600", "whiteAlpha.600")}
+            color={useColorModeValue('blackAlpha.600', 'whiteAlpha.600')}
             token={coin.symbol}
           />
         </StatNumber>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Button,
   Box,
@@ -16,19 +16,15 @@ import {
   NumberInputField,
   useToast,
   ModalCloseButton,
-} from "@chakra-ui/react";
-import { IoAdd } from "react-icons/io5";
-import { CreateAAType } from "../types";
+} from '@chakra-ui/react';
+import { IoAdd } from 'react-icons/io5';
+import { CreateAAType } from '../types';
 
-export const CreateAAButton = ({
-  buttonText,
-  isDisabled,
-  handleCreate,
-}: CreateAAType) => {
-  const [newFunds, setNewFunds] = useState<string>("100000");
-  const [newThreshold, setNewThreshold] = useState<string>("1");
-  const [guardiansCount, setGuardiansCount] = useState<string>("1");
-  const [newGuardians, setNewGuardians] = useState<string[]>([""]);
+export const CreateAAButton = ({ buttonText, isDisabled, handleCreate }: CreateAAType) => {
+  const [newFunds, setNewFunds] = useState<string>('100000');
+  const [newThreshold, setNewThreshold] = useState<string>('1');
+  const [guardiansCount, setGuardiansCount] = useState<string>('1');
+  const [newGuardians, setNewGuardians] = useState<string[]>(['']);
   const [isLoading, setLoading] = useState<boolean>(false);
   const toast = useToast();
 
@@ -38,11 +34,11 @@ export const CreateAAButton = ({
     setLoading(true);
     try {
       const filtered = newGuardians
-        .filter((guardian) => guardian.length > 0)
+        .filter(guardian => guardian.length > 0)
         .filter((item, i, ar) => ar.indexOf(item) === i);
 
       if (Number(newThreshold) > filtered.length) {
-        throw Error("Error sending");
+        throw Error('Error sending');
       }
 
       const result = (await handleCreate?.({
@@ -53,19 +49,19 @@ export const CreateAAButton = ({
 
       if (result?.length > 0) {
         toast({
-          title: "Account created",
-          status: "success",
+          title: 'Account created',
+          status: 'success',
           duration: 5000,
           isClosable: true,
         });
       } else {
-        throw Error("Error sending");
+        throw Error('Error sending');
       }
     } catch (error: any) {
       toast({
-        title: "Fail creating",
+        title: 'Fail creating',
         description: error,
-        status: "error",
+        status: 'error',
         duration: 5000,
         isClosable: true,
       });
@@ -77,7 +73,7 @@ export const CreateAAButton = ({
   const handleThreshold = (value: string) => {
     setNewThreshold(value);
     setGuardiansCount(value);
-    setNewGuardians(Array(Number(value)).fill(""));
+    setNewGuardians(Array(Number(value)).fill(''));
   };
 
   const handleGuardianChange = (index: number, e: any) => {
@@ -88,7 +84,7 @@ export const CreateAAButton = ({
 
   const addRow = () => {
     setGuardiansCount(guardiansCount + 1);
-    setNewGuardians([...newGuardians, ""]);
+    setNewGuardians([...newGuardians, '']);
   };
 
   return (
@@ -103,69 +99,42 @@ export const CreateAAButton = ({
         opacity={1}
         transition="all .5s ease-in-out"
         _hover={{
-          bgImage:
-            "linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)",
+          bgImage: 'linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)',
           opacity: 0.75,
         }}
         _active={{
-          bgImage:
-            "linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)",
+          bgImage: 'linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)',
           opacity: 0.9,
         }}
         onClick={onOpen}
       >
         <Icon as={IoAdd} mr={2} />
-        {buttonText ? buttonText : "Create Smart Account"}
+        {buttonText ? buttonText : 'Create Smart Account'}
       </Button>
-      <Modal
-        closeOnOverlayClick={!isLoading}
-        isOpen={isOpen}
-        onClose={onClose}
-        isCentered
-      >
+      <Modal closeOnOverlayClick={!isLoading} isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Create Smart Account</ModalHeader>
           <ModalCloseButton isDisabled={isLoading} />
           <ModalBody>
-            <Text
-              marginTop="3"
-              marginBottom="3"
-              fontSize="sm"
-              fontWeight="semibold"
-            >
+            <Text marginTop="3" marginBottom="3" fontSize="sm" fontWeight="semibold">
               Threshold:
             </Text>
-            <NumberInput
-              defaultValue="1"
-              min={1}
-              value={newThreshold}
-              onChange={handleThreshold}
-            >
+            <NumberInput defaultValue="1" min={1} value={newThreshold} onChange={handleThreshold}>
               <NumberInputField />
             </NumberInput>
-            <Text
-              marginTop="3"
-              marginBottom="3"
-              fontSize="sm"
-              fontWeight="semibold"
-            >
+            <Text marginTop="3" marginBottom="3" fontSize="sm" fontWeight="semibold">
               Funds(stake):
             </Text>
             <NumberInput
               defaultValue="100000"
               min={1}
               value={newFunds}
-              onChange={(value) => setNewFunds(value)}
+              onChange={value => setNewFunds(value)}
             >
               <NumberInputField />
             </NumberInput>
-            <Text
-              marginTop="3"
-              marginBottom="3"
-              fontSize="sm"
-              fontWeight="semibold"
-            >
+            <Text marginTop="3" marginBottom="3" fontSize="sm" fontWeight="semibold">
               Guardians:
             </Text>
             <Box>
@@ -174,27 +143,17 @@ export const CreateAAButton = ({
                   marginBottom="3"
                   key={index}
                   value={guardian}
-                  onChange={(e) => handleGuardianChange(index, e)}
+                  onChange={e => handleGuardianChange(index, e)}
                   placeholder={`Guardian ${index + 1}`}
                 />
               ))}
             </Box>
           </ModalBody>
           <ModalFooter justifyContent="space-around">
-            <Button
-              colorScheme="purple"
-              variant="outline"
-              isLoading={isLoading}
-              onClick={addRow}
-            >
+            <Button colorScheme="purple" variant="outline" isLoading={isLoading} onClick={addRow}>
               Add Guardian
             </Button>
-            <Button
-              colorScheme="purple"
-              variant="solid"
-              isLoading={isLoading}
-              onClick={onClick}
-            >
+            <Button colorScheme="purple" variant="solid" isLoading={isLoading} onClick={onClick}>
               Create
             </Button>
           </ModalFooter>

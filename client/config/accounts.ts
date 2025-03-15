@@ -1,10 +1,7 @@
-import {
-  Account,
-  accountFromAny as LegacyAccountFromAny,
-} from "@cosmjs/stargate";
-import { Any } from "cosmjs-types/google/protobuf/any";
-import { Uint64 } from "@cosmjs/math";
-import { AbstractAccount } from "../codegen/codegen/abstractaccount/v1/account";
+import { Account, accountFromAny as LegacyAccountFromAny } from '@cosmjs/stargate';
+import { Any } from 'cosmjs-types/google/protobuf/any';
+import { Uint64 } from '@cosmjs/math';
+import { AbstractAccount } from '../codegen/codegen/abstractaccount/v1/account';
 
 function uint64FromProto(input: number | bigint): Uint64 {
   return Uint64.fromString(input.toString());
@@ -29,7 +26,7 @@ export function accountFromAny(input: Any): Account {
   const { typeUrl, value } = input;
 
   switch (typeUrl) {
-    case "/abstractaccount.v1.AbstractAccount": {
+    case '/abstractaccount.v1.AbstractAccount': {
       const baseAccount = AbstractAccount.decode(value);
       return accountFromBaseAccount(baseAccount);
     }

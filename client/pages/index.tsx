@@ -1,17 +1,17 @@
-import Head from "next/head";
-import { Container, Button, Flex, Icon, useColorMode } from "@chakra-ui/react";
-import { BsFillMoonStarsFill, BsFillSunFill } from "react-icons/bs";
-import { FaHome } from "react-icons/fa";
-import { useChain, useManager } from "@cosmos-kit/react";
+import Head from 'next/head';
+import { Container, Button, Flex, Icon, useColorMode } from '@chakra-ui/react';
+import { BsFillMoonStarsFill, BsFillSunFill } from 'react-icons/bs';
+import { FaHome } from 'react-icons/fa';
+import { useChain, useManager } from '@cosmos-kit/react';
 
-import { ChainCard, WalletSection } from "../components";
-import { useBalances } from "../hooks/useBalances";
-import { useState } from "react";
-import { useAA } from "../hooks/useAA";
-import { useCreateAA } from "../hooks/useCreateAA";
-import { AbstractAccountSection } from "../components/abstr";
-import { AccountInfoType } from "../hooks/types";
-import { defaultChainName } from "../config";
+import { ChainCard, WalletSection } from '../components';
+import { useBalances } from '../hooks/useBalances';
+import { useState } from 'react';
+import { useAA } from '../hooks/useAA';
+import { useCreateAA } from '../hooks/useCreateAA';
+import { AbstractAccountSection } from '../components/abstr';
+import { AccountInfoType } from '../hooks/types';
+import { defaultChainName } from '../config';
 
 export default function Home() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -19,7 +19,7 @@ export default function Home() {
   const { getChainLogo } = useManager();
   const { chain: chainInfo } = useChain(defaultChainName);
 
-  const [txHash, setTxHash] = useState<string>("");
+  const [txHash, setTxHash] = useState<string>('');
 
   const chain = {
     chainName: defaultChainName,
@@ -29,17 +29,15 @@ export default function Home() {
   };
 
   const { handleCreateAA, contractAddress } = useCreateAA(setTxHash);
-  const {
-    accountInfo,
-    isGuardian,
-    contractAddressLocal,
-    handleRecover,
-    handleRevoke,
-  } = useAA(contractAddress, txHash, setTxHash);
+  const { accountInfo, isGuardian, contractAddressLocal, handleRecover, handleRevoke } = useAA(
+    contractAddress,
+    txHash,
+    setTxHash
+  );
   const { balance, accountBalance, handleSend, handleSendAA } = useBalances(
     contractAddressLocal,
     txHash,
-    setTxHash,
+    setTxHash
   );
 
   return (
@@ -51,24 +49,14 @@ export default function Home() {
       </Head>
       <Flex justifyContent="end" mb={4}>
         <Button variant="outline" px={0} onClick={toggleColorMode}>
-          <Icon
-            as={colorMode === "light" ? BsFillMoonStarsFill : BsFillSunFill}
-          />
+          <Icon as={colorMode === 'light' ? BsFillMoonStarsFill : BsFillSunFill} />
         </Button>
-        <Button
-          variant="outline"
-          px={0}
-          ml={2}
-          onClick={() => (window.location.href = "/")}
-        >
+        <Button variant="outline" px={0} ml={2} onClick={() => (window.location.href = '/')}>
           <Icon as={FaHome} />
         </Button>
       </Flex>
       <Flex>
-        <ChainCard
-          prettyName={chain?.label || defaultChainName}
-          icon={chain?.icon}
-        />
+        <ChainCard prettyName={chain?.label || defaultChainName} icon={chain?.icon} />
       </Flex>
       <Flex justifyContent="center" alignItems="start">
         <AbstractAccountSection

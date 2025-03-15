@@ -1,17 +1,13 @@
-import { useChain } from "@cosmos-kit/react";
-import {
-  defaultBackendEndpoint,
-  defaultChainName,
-  defaultRpc,
-} from "../config";
-import { SigningStargateClient } from "@cosmjs/stargate";
-import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import { useChain } from '@cosmos-kit/react';
+import { defaultBackendEndpoint, defaultChainName, defaultRpc } from '../config';
+import { SigningStargateClient } from '@cosmjs/stargate';
+import { useCallback, useEffect, useState } from 'react';
+import axios from 'axios';
 
-import { getSigningAbstractaccountClient } from "../codegen/codegen";
-import { InstantiateMsg } from "../codegen/SocialRecovery.types";
-import { Event } from "../codegen/codegen/tendermint/abci/types";
-import { CreateAccountType } from "./types";
+import { getSigningAbstractaccountClient } from '../codegen/codegen';
+import { InstantiateMsg } from '../codegen/SocialRecovery.types';
+import { Event } from '../codegen/codegen/tendermint/abci/types';
+import { CreateAccountType } from './types';
 
 type CreateResponse = {
   result: string;
@@ -22,11 +18,10 @@ type CreateResponse = {
 export function useCreateAA(setTxHash: (v: string) => void) {
   const { address, getOfflineSigner } = useChain(defaultChainName);
 
-  const [signingClientCosmos, setSigningClientCosmos] =
-    useState<SigningStargateClient | null>(null);
-  const [contractAddress, setContractAddress] = useState<string | undefined>(
-    undefined,
+  const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(
+    null
   );
+  const [contractAddress, setContractAddress] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!address || signingClientCosmos) {
@@ -36,7 +31,7 @@ export function useCreateAA(setTxHash: (v: string) => void) {
     getSigningAbstractaccountClient({
       rpcEndpoint: defaultRpc,
       signer: getOfflineSigner(),
-    }).then((client) => {
+    }).then(client => {
       if (!client) {
         return;
       }
@@ -47,19 +42,11 @@ export function useCreateAA(setTxHash: (v: string) => void) {
   const handleCreateAA = useCallback(
     async (params: CreateAccountType) => {
       const { funds, guardians, threshold } = params;
-      if (
-        !funds ||
-        !guardians ||
-        !threshold ||
-        !address ||
-        !signingClientCosmos
-      ) {
+      if (!funds || !guardians || !threshold || !address || !signingClientCosmos) {
         return;
       }
 
-      const pubKey = await signingClientCosmos
-        .getAccount(address)
-        .then((acc) => acc?.pubkey);
+      const pubKey = await signingClientCosmos.getAccount(address).then(acc => acc?.pubkey);
 
       if (!pubKey) {
         return;
@@ -81,31 +68,29 @@ export function useCreateAA(setTxHash: (v: string) => void) {
 
       const headers = {
         headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
         },
       };
 
       const res = await axios.post<CreateResponse>(
         `${defaultBackendEndpoint}/create`,
         data,
-        headers,
+        headers
       );
 
       if (!res.data.events) {
         return;
       }
 
-      const createEvent = res.data.events.find(
-        (e) => e.type === "account_registered",
-      );
+      const createEvent = res.data.events.find(e => e.type === 'account_registered');
 
       if (!createEvent) {
         return;
       }
 
       const attr = createEvent.attributes.find(
-        (attr) => Buffer.from(attr.key).toString() === "contract_addr",
+        attr => Buffer.from(attr.key).toString() === 'contract_addr'
       );
 
       if (!attr) {
@@ -115,12 +100,12 @@ export function useCreateAA(setTxHash: (v: string) => void) {
       const resContractAddress = Buffer.from(attr.value).toString();
 
       setContractAddress(resContractAddress);
-      localStorage.setItem("contractAddress", resContractAddress);
+      localStorage.setItem('contractAddress', resContractAddress);
       setTxHash(res.data.txHash);
 
       return res.data.txHash as any;
     },
-    [address, setContractAddress, setTxHash, signingClientCosmos],
+    [address, setContractAddress, setTxHash, signingClientCosmos]
   );
 
   return { contractAddress, handleCreateAA };

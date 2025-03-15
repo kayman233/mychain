@@ -1,13 +1,13 @@
-import { useChain } from "@cosmos-kit/react";
-import { Center, Grid, GridItem, Stack, useColorMode } from "@chakra-ui/react";
+import { useChain } from '@cosmos-kit/react';
+import { Center, Grid, GridItem, Stack, useColorMode } from '@chakra-ui/react';
 
-import { defaultChainName } from "../config";
-import { AccountInfoType } from "../hooks/types";
-import { ConnectedUserBalanceInfo } from "./react/user-balance";
-import { ConnectedUserInfo } from "./react/user-card";
-import { ConnectedShowAddress } from "./react/address-card";
-import { RecoveryAAButton } from "./react/recovery-aa";
-import { InfoAccordion } from "./react/accordion";
+import { defaultChainName } from '../config';
+import { AccountInfoType } from '../hooks/types';
+import { ConnectedUserBalanceInfo } from './react/user-balance';
+import { ConnectedUserInfo } from './react/user-card';
+import { ConnectedShowAddress } from './react/address-card';
+import { RecoveryAAButton } from './react/recovery-aa';
+import { InfoAccordion } from './react/accordion';
 
 export const AbstractAccountSection = ({
   info,
@@ -33,16 +33,14 @@ export const AbstractAccountSection = ({
 
   const userInfo = <ConnectedUserInfo username="Abstract Smart Account" />;
 
-  const userBalance = accountBalance && (
-    <ConnectedUserBalanceInfo balance={accountBalance} />
-  );
+  const userBalance = accountBalance && <ConnectedUserBalanceInfo balance={accountBalance} />;
 
   const recoveryBtn = (
     <RecoveryAAButton
       isDisabled={!isGuardian}
       handleRecover={handleRecover}
       handleRevoke={handleRevoke}
-      voted={info.votes?.findIndex((vote) => vote.addr === addressUser) != -1}
+      voted={info.votes?.findIndex(vote => vote.addr === addressUser) != -1}
     />
   );
 
@@ -61,11 +59,11 @@ export const AbstractAccountSection = ({
             justifyContent="center"
             alignItems="center"
             borderRadius="lg"
-            bg={colorMode === "light" ? "white" : "blackAlpha.400"}
+            bg={colorMode === 'light' ? 'white' : 'blackAlpha.400'}
             boxShadow={
-              colorMode === "light"
-                ? "0 0 2px #dfdfdf, 0 0 6px -2px #d3d3d3"
-                : "0 0 2px #363636, 0 0 8px -2px #4f4f4f"
+              colorMode === 'light'
+                ? '0 0 2px #dfdfdf, 0 0 6px -2px #d3d3d3'
+                : '0 0 2px #363636, 0 0 8px -2px #4f4f4f'
             }
             spacing={4}
             px={4}

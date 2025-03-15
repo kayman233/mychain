@@ -2,7 +2,7 @@ import {
   ArrayOfCountsResponse,
   ArrayOfVotesResponse,
   GuardiansListResp,
-} from "../codegen/SocialRecovery.types";
+} from '../codegen/SocialRecovery.types';
 
 export type CreateAccountType = {
   funds?: string;

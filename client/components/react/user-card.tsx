@@ -1,16 +1,13 @@
-import React from "react";
-import { Text, Stack, Box } from "@chakra-ui/react";
-import { ConnectedUserCardType } from "../types";
+import React from 'react';
+import { Text, Stack, Box } from '@chakra-ui/react';
+import { ConnectedUserCardType } from '../types';
 
-export const ConnectedUserInfo = ({
-  username,
-  icon,
-}: ConnectedUserCardType) => (
+export const ConnectedUserInfo = ({ username, icon }: ConnectedUserCardType) => (
   <Stack spacing={1} alignItems="center">
     {username && (
       <>
         <Box
-          display={icon ? "block" : "none"}
+          display={icon ? 'block' : 'none'}
           minW={20}
           maxW={20}
           w={20}
@@ -22,7 +19,7 @@ export const ConnectedUserInfo = ({
         >
           {icon}
         </Box>
-        <Text fontSize={{ md: "xl" }} fontWeight="semibold">
+        <Text fontSize={{ md: 'xl' }} fontWeight="semibold">
           {username}
         </Text>
       </>
