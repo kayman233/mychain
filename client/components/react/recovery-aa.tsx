@@ -1,18 +1,4 @@
 import React, { useState } from 'react';
-import {
-  Button,
-  Input,
-  Icon,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalHeader,
-  ModalContent,
-  ModalFooter,
-  ModalBody,
-  useToast,
-  ModalCloseButton,
-} from '@chakra-ui/react';
 import { IoBuildSharp } from 'react-icons/io5';
 import { RecoverAAType } from '../types';
 
@@ -25,9 +11,15 @@ export const RecoveryAAButton = ({
 }: RecoverAAType) => {
   const [newkey, setNewkey] = useState<string | undefined>('');
   const [isLoading, setLoading] = useState<boolean>(false);
-  const toast = useToast();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<{
+    title: string;
+    status: 'success' | 'error';
+    description?: string;
+  } | null>(null);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const onOpen = () => setIsOpen(true);
+  const onClose = () => setIsOpen(false);
 
   const onRecoverClick = async () => {
     setLoading(true);
@@ -35,23 +27,21 @@ export const RecoveryAAButton = ({
       const result = (await handleRecover?.(newkey)) as unknown as string;
 
       if (result?.length > 0) {
-        toast({
+        setToastMessage({
           title: 'Recovery is successful',
           status: 'success',
-          duration: 5000,
-          isClosable: true,
         });
+        setTimeout(() => setToastMessage(null), 5000);
       } else {
         throw Error('Error sending');
       }
     } catch (error: any) {
-      toast({
+      setToastMessage({
         title: 'Error sending',
-        description: error,
+        description: error.toString(),
         status: 'error',
-        duration: 5000,
-        isClosable: true,
       });
+      setTimeout(() => setToastMessage(null), 5000);
     }
     setLoading(false);
     onClose();
@@ -63,87 +53,168 @@ export const RecoveryAAButton = ({
       const result = (await handleRevoke?.()) as unknown as string;
 
       if (result?.length > 0) {
-        toast({
+        setToastMessage({
           title: 'Revoke is successful',
           status: 'success',
-          duration: 5000,
-          isClosable: true,
         });
+        setTimeout(() => setToastMessage(null), 5000);
       } else {
         throw Error('Error sending');
       }
     } catch (error: any) {
-      toast({
+      setToastMessage({
         title: 'Error sending',
-        description: error,
+        description: error.toString(),
         status: 'error',
-        duration: 5000,
-        isClosable: true,
       });
+      setTimeout(() => setToastMessage(null), 5000);
     }
     setLoading(false);
     onClose();
   };
+
   return (
     <>
-      <Button
-        w="full"
-        minW="fit-content"
-        size="lg"
-        isDisabled={isDisabled}
-        bgImage="linear-gradient(109.6deg, #4b55c7 11.2%, #5176cc 83.1%)"
-        color="white"
-        opacity={1}
-        transition="all .5s ease-in-out"
-        _hover={{
-          bgImage: 'linear-gradient(109.6deg, #4b55c7 11.2%, #5176cc 83.1%)',
-          opacity: 0.75,
+      <button
+        style={{
+          width: '100%',
+          minWidth: 'fit-content',
+          height: '48px',
+          borderRadius: '8px',
+          backgroundColor: '#4b55c7',
+          backgroundImage: 'linear-gradient(109.6deg, #4b55c7 11.2%, #5176cc 83.1%)',
+          color: 'white',
+          border: 'none',
+          cursor: isDisabled ? 'not-allowed' : 'pointer',
+          opacity: isDisabled ? 0.6 : 1,
+          transition: 'all .5s ease-in-out',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '16px',
+          fontWeight: '500',
         }}
-        _active={{
-          bgImage: 'linear-gradient(109.6deg, #4b55c7 11.2%, #5176cc 83.1%)',
-          opacity: 0.9,
-        }}
+        disabled={isDisabled}
         onClick={onOpen}
       >
-        <Icon as={IoBuildSharp} mr={2} />
+        <IoBuildSharp style={{ marginRight: '8px' }} />
         {buttonText ? buttonText : 'Recovery'}
-      </Button>
-      <Modal closeOnOverlayClick={!isLoading} isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Recovery</ModalHeader>
-          <ModalCloseButton isDisabled={isLoading} />
-          <ModalBody>
-            <Input
-              isDisabled={voted}
+      </button>
+
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              width: '90%',
+              maxWidth: '400px',
+              padding: '20px',
+              position: 'relative',
+            }}
+          >
+            <div style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '16px' }}>
+              Recovery
+            </div>
+            <button
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                background: 'none',
+                border: 'none',
+                fontSize: '20px',
+                cursor: 'pointer',
+              }}
+              onClick={onClose}
+              disabled={isLoading}
+            >
+              ×
+            </button>
+
+            <input
+              disabled={voted}
               placeholder="New Pubkey"
               value={newkey}
-              onChange={(e: any) => setNewkey(e.target.value)}
+              onChange={e => setNewkey(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #E2E8F0',
+                borderRadius: '4px',
+                opacity: voted ? 0.6 : 1,
+              }}
             />
-          </ModalBody>
 
-          <ModalFooter justifyContent="space-around">
-            <Button
-              colorScheme="purple"
-              variant="solid"
-              isLoading={isLoading}
-              isDisabled={voted}
-              onClick={() => onRecoverClick()}
-            >
-              Recover
-            </Button>
-            <Button
-              colorScheme="purple"
-              variant="outline"
-              isLoading={isLoading}
-              isDisabled={!voted}
-              onClick={() => onRevokeClick()}
-            >
-              Revoke
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+            <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '20px' }}>
+              <button
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  backgroundColor: '#805AD5',
+                  color: 'white',
+                  border: 'none',
+                  cursor: isLoading || voted ? 'not-allowed' : 'pointer',
+                  opacity: isLoading || voted ? 0.6 : 1,
+                }}
+                disabled={isLoading || voted}
+                onClick={onRecoverClick}
+              >
+                {isLoading ? 'Loading...' : 'Recover'}
+              </button>
+              <button
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  backgroundColor: 'white',
+                  color: '#805AD5',
+                  border: '1px solid #805AD5',
+                  cursor: isLoading || !voted ? 'not-allowed' : 'pointer',
+                  opacity: isLoading || !voted ? 0.6 : 1,
+                }}
+                disabled={isLoading || !voted}
+                onClick={onRevokeClick}
+              >
+                {isLoading ? 'Loading...' : 'Revoke'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toastMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            backgroundColor: toastMessage.status === 'success' ? '#48BB78' : '#E53E3E',
+            color: 'white',
+            padding: '12px 20px',
+            borderRadius: '4px',
+            zIndex: 1001,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+          }}
+        >
+          <div style={{ fontWeight: 'bold' }}>{toastMessage.title}</div>
+          {toastMessage.description && (
+            <div style={{ marginTop: '4px' }}>{toastMessage.description}</div>
+          )}
+        </div>
+      )}
     </>
   );
 };

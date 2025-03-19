@@ -2,7 +2,7 @@ import { assets } from 'chain-registry';
 import { AssetList, Asset } from '@chain-registry/types';
 
 export const defaultChainName = 'gmrollup';
-export const defaultRpc = process.env.REACT_APP_RPC_ENDPOINT ?? '127.0.0.1:26657';
+export const defaultRpc = process.env.REACT_APP_RPC_ENDPOINT ?? 'http://localhost:26657';
 export const defaultBackendEndpoint =
   process.env.REACT_APP_GO_SERVER_ENDPOINT ?? 'http://localhost:8080';
 

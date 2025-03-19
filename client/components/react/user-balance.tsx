@@ -1,16 +1,15 @@
 import React from 'react';
-import { Stack, Stat, StatLabel, StatNumber } from '@chakra-ui/react';
 import { ConnectedUserBalanceType } from '../types';
 
 export const ConnectedUserBalanceInfo = ({ balance }: ConnectedUserBalanceType) => (
-  <Stack spacing={1} alignItems="center">
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
     {balance && (
       <>
-        <Stat>
-          <StatLabel>Balance</StatLabel>
-          <StatNumber>{balance}stake</StatNumber>
-        </Stat>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '14px', color: '#718096' }}>Balance</div>
+          <div style={{ fontSize: '20px', fontWeight: '600' }}>{balance}stake</div>
+        </div>
       </>
     )}
-  </Stack>
+  </div>
 );

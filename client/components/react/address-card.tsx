@@ -1,4 +1,3 @@
-import { Box, Button, Icon, Text, useClipboard, useColorMode, Image } from '@chakra-ui/react';
 import { WalletStatus } from '@cosmos-kit/core';
 import { FaCheckCircle } from 'react-icons/fa';
 import { FiCopy } from 'react-icons/fi';
@@ -8,22 +7,22 @@ import { CopyAddressType } from '../types';
 
 const SIZES = {
   lg: {
-    height: 12,
-    walletImageSize: 7,
-    icon: 5,
-    fontSize: 'md',
+    height: '48px',
+    walletImageSize: '28px',
+    icon: '20px',
+    fontSize: '16px',
   },
   md: {
-    height: 10,
-    walletImageSize: 6,
-    icon: 4,
-    fontSize: 'sm',
+    height: '40px',
+    walletImageSize: '24px',
+    icon: '16px',
+    fontSize: '14px',
   },
   sm: {
-    height: 7,
-    walletImageSize: 5,
-    icon: 3.5,
-    fontSize: 'sm',
+    height: '28px',
+    walletImageSize: '20px',
+    icon: '14px',
+    fontSize: '14px',
   },
 };
 
@@ -54,14 +53,20 @@ export const ConnectedShowAddress = ({
   size = 'md',
   maxDisplayLength,
 }: CopyAddressType) => {
-  const { hasCopied, onCopy } = useClipboard(address ? address : '');
+  const [hasCopied, setHasCopied] = useState(false);
   const [displayAddress, setDisplayAddress] = useState('');
-  const { colorMode } = useColorMode();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const defaultMaxLength = {
     lg: 14,
     md: 16,
     sm: 18,
+  };
+
+  const onCopy = () => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setHasCopied(true);
+      setTimeout(() => setHasCopied(false), 2000);
+    }
   };
 
   useEffect(() => {
@@ -75,84 +80,65 @@ export const ConnectedShowAddress = ({
   }, [address, defaultMaxLength, maxDisplayLength, size]);
 
   return (
-    <Button
+    <button
       title={address}
-      variant="unstyled"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      borderRadius={isRound ? 'full' : 'lg'}
-      border="1px solid"
-      borderColor={handleChangeColorModeValue(colorMode, 'gray.200', 'whiteAlpha.300')}
-      w="full"
-      h={SIZES[size as keyof typeof SIZES].height}
-      minH="fit-content"
-      pl={2}
-      pr={2}
-      color={handleChangeColorModeValue(colorMode, 'gray.700', 'whiteAlpha.600')}
-      transition="all .3s ease-in-out"
-      isDisabled={!address}
-      isLoading={isLoading}
-      _hover={{
-        bg: 'rgba(142, 142, 142, 0.05)',
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: isRound ? '9999px' : '8px',
+        border: '1px solid #E2E8F0',
+        width: '100%',
+        height: SIZES[size as keyof typeof SIZES].height,
+        minHeight: 'fit-content',
+        paddingLeft: '8px',
+        paddingRight: '8px',
+        color: '#4A5568',
+        transition: 'all .3s ease-in-out',
+        opacity: !address ? 0.6 : 1,
+        cursor: !address ? 'not-allowed' : 'pointer',
+        backgroundColor: 'transparent',
       }}
-      _focus={{
-        outline: 'none',
-      }}
-      _disabled={{
-        opacity: 0.6,
-        cursor: 'not-allowed',
-        borderColor: 'rgba(142, 142, 142, 0.1)',
-        _hover: {
-          bg: 'transparent',
-        },
-        _active: {
-          outline: 'none',
-        },
-        _focus: {
-          outline: 'none',
-        },
-      }}
+      disabled={!address || isLoading}
       onClick={onCopy}
     >
       {address && walletIcon && (
-        <Box
-          borderRadius="full"
-          w="full"
-          h="full"
-          minW={SIZES[size as keyof typeof SIZES].walletImageSize}
-          minH={SIZES[size as keyof typeof SIZES].walletImageSize}
-          maxW={SIZES[size as keyof typeof SIZES].walletImageSize}
-          maxH={SIZES[size as keyof typeof SIZES].walletImageSize}
-          mr={2}
-          opacity={0.85}
+        <div
+          style={{
+            borderRadius: '50%',
+            width: SIZES[size as keyof typeof SIZES].walletImageSize,
+            height: SIZES[size as keyof typeof SIZES].walletImageSize,
+            marginRight: '8px',
+            opacity: 0.85,
+          }}
         >
-          <Image alt={displayAddress} src={walletIcon} />
-        </Box>
+          <img alt={displayAddress} src={walletIcon} style={{ width: '100%', height: '100%' }} />
+        </div>
       )}
-      <Text
-        fontSize={SIZES[size as keyof typeof SIZES].fontSize}
-        fontWeight="normal"
-        letterSpacing="0.4px"
-        opacity={0.75}
+      <div
+        style={{
+          fontSize: SIZES[size as keyof typeof SIZES].fontSize,
+          fontWeight: 'normal',
+          letterSpacing: '0.4px',
+          opacity: 0.75,
+        }}
       >
-        {displayAddress}
-      </Text>
+        {isLoading ? 'Loading...' : displayAddress}
+      </div>
       {address && (
-        <Icon
-          as={hasCopied ? FaCheckCircle : FiCopy}
-          w={SIZES[size as keyof typeof SIZES].icon}
-          h={SIZES[size as keyof typeof SIZES].icon}
-          ml={2}
-          opacity={0.9}
-          color={
-            hasCopied
-              ? 'green.400'
-              : handleChangeColorModeValue(colorMode, 'gray.500', 'whiteAlpha.400')
-          }
-        />
+        <div
+          style={{
+            width: SIZES[size as keyof typeof SIZES].icon,
+            height: SIZES[size as keyof typeof SIZES].icon,
+            marginLeft: '8px',
+            opacity: 0.9,
+            color: hasCopied ? '#48BB78' : '#718096',
+          }}
+        >
+          {hasCopied ? <FaCheckCircle /> : <FiCopy />}
+        </div>
       )}
-    </Button>
+    </button>
   );
 };
 

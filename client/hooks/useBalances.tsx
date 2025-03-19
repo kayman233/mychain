@@ -1,12 +1,8 @@
 import { useChain } from '@cosmos-kit/react';
 import { defaultBackendEndpoint, defaultChainName, defaultRpc } from '../config';
-import {
-  SigningStargateClient,
-  SigningStargateClientOptions,
-  StargateClient,
-} from '@cosmjs/stargate';
+import { StargateClient } from '@cosmjs/stargate';
+import { StdFee } from '@cosmjs/amino';
 import { useCallback, useEffect, useState } from 'react';
-import { accountFromAny } from '../config/accounts';
 import axios from 'axios';
 import { delay } from './useAA';
 
@@ -15,69 +11,73 @@ export function useBalances(
   txHash: string,
   setTxHash: (v: string) => void
 ) {
-  const { address, getStargateClient, getOfflineSigner, username } = useChain(defaultChainName);
+  const { address, getSigningStargateClient, username, status, getRpcEndpoint } =
+    useChain(defaultChainName);
 
-  const [clientCosmos, setClientCosmos] = useState<StargateClient | null>(null);
-  const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(
-    null
-  );
-  const [accountBalance, setAccountBalance] = useState<string>('');
   const [balance, setBalance] = useState<string>('');
-  const [result] = useState('');
+  const [accountBalance, setAccountBalance] = useState<string>('');
+  const [isFetchingBalance, setFetchingBalance] = useState(false);
 
-  useEffect(() => {
+  // Функция для получения баланса
+  const getBalance = useCallback(async () => {
     if (!address) {
+      setBalance('0');
+      setFetchingBalance(false);
       return;
     }
-    getStargateClient().then(client => {
-      if (!client) {
-        return;
+
+    setFetchingBalance(true);
+
+    try {
+      // Получаем RPC endpoint
+      let rpcEndpoint = await getRpcEndpoint();
+
+      if (!rpcEndpoint) {
+        console.info('no rpc endpoint — using a fallback');
+        rpcEndpoint = defaultRpc;
       }
-      setClientCosmos(client);
-    });
-  }, [address, getStargateClient]);
 
-  useEffect(() => {
-    if (!address) {
-      return;
-    }
-    const options: SigningStargateClientOptions = {
-      accountParser: accountFromAny,
-    };
+      // Создаем клиент
+      const client = await StargateClient.connect(
+        typeof rpcEndpoint === 'string' ? rpcEndpoint : rpcEndpoint.url
+      );
 
-    SigningStargateClient.connectWithSigner(defaultRpc, getOfflineSigner(), options).then(
-      client => {
-        if (!client) {
-          return;
-        }
-        setSigningClientCosmos(client);
-      }
-    );
-  }, [address, getOfflineSigner]);
+      // Получаем баланс
+      const balanceResponse = await client.getBalance(address, 'stake');
+      setBalance(balanceResponse.amount);
 
-  useEffect(() => {
-    if (clientCosmos && address) {
-      clientCosmos.getBalance(address, 'stake').then(res => setBalance(res.amount));
+      // Если есть адрес контракта, получаем его баланс
       if (localContractAddress) {
-        clientCosmos
-          .getBalance(localContractAddress, 'stake')
-          .then(res => setAccountBalance(res.amount));
+        const contractBalanceResponse = await client.getBalance(localContractAddress, 'stake');
+        setAccountBalance(contractBalanceResponse.amount);
       }
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+    } finally {
+      setFetchingBalance(false);
     }
-  }, [address, clientCosmos, txHash, localContractAddress]);
+  }, [address, localContractAddress, getRpcEndpoint]);
 
+  // Загружаем баланс при изменении адреса или txHash
+  useEffect(() => {
+    getBalance();
+  }, [getBalance, txHash]);
+
+  // Функция для отправки токенов
   const handleSend = useCallback(
     async (amount: string | undefined, recipient: string | undefined) => {
-      if (!clientCosmos) {
+      if (!amount || !recipient || !address) {
         return;
       }
 
-      if (!amount || !recipient || !address || !signingClientCosmos) {
-        return;
-      }
+      try {
+        const stargateClient = await getSigningStargateClient();
+        if (!stargateClient) {
+          console.error('stargateClient undefined');
+          return;
+        }
 
-      const message = [
-        {
+        const message = {
           typeUrl: '/cosmos.bank.v1beta1.MsgSend',
           value: {
             fromAddress: address,
@@ -89,53 +89,72 @@ export function useBalances(
               },
             ],
           },
-        },
-      ];
+        };
 
-      const result = await signingClientCosmos.signAndBroadcast(address, message, {
-        gas: '200000',
-        amount: [],
-      });
-      await delay(3000);
-      setTxHash(result.transactionHash);
-      return result.transactionHash as any;
+        const fee: StdFee = {
+          amount: [
+            {
+              denom: 'stake',
+              amount: '1',
+            },
+          ],
+          gas: '200000',
+        };
+
+        const response = await stargateClient.signAndBroadcast(address, [message], fee);
+
+        await delay(3000);
+        setTxHash(response.transactionHash);
+        return response.transactionHash;
+      } catch (error) {
+        console.error('Error sending tokens:', error);
+      }
     },
-    [clientCosmos, address, signingClientCosmos, setTxHash]
+    [address, getSigningStargateClient, setTxHash]
   );
 
+  // Функция для отправки токенов через AA
   const handleSendAA = useCallback(
     async (amount: string | undefined, recipient: string | undefined) => {
       if (!localContractAddress || !recipient || !amount || !username) {
         return;
       }
-      const data = {
-        sender: localContractAddress,
-        recipient: recipient,
-        denom: 'stake',
-        amount: amount,
-        user: username,
-      };
-      const headers = {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      };
 
-      const response = await axios.post(`${defaultBackendEndpoint}/send`, data, headers);
-      await delay(3000);
-      setTxHash(response.data.txHash);
-      return response.data.result;
+      try {
+        const data = {
+          sender: localContractAddress,
+          recipient: recipient,
+          denom: 'stake',
+          amount: amount,
+          user: username,
+        };
+
+        const headers = {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        };
+
+        const response = await axios.post(`${defaultBackendEndpoint}/send`, data, headers);
+        await delay(3000);
+        setTxHash(response.data.txHash);
+        return response.data.result;
+      } catch (error) {
+        console.error('Error sending tokens via AA:', error);
+      }
     },
     [localContractAddress, username, setTxHash]
   );
 
   return {
-    balance: balance ?? undefined,
-    txHash,
-    result,
+    balance,
     accountBalance,
+    txHash,
+    isFetchingBalance,
+    isConnected: status === 'Connected',
     handleSend,
     handleSendAA,
+    getBalance,
   };
 }

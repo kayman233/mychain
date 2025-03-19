@@ -1,5 +1,4 @@
 import React, { MouseEventHandler, ReactNode } from 'react';
-import { Button, Icon, Stack, Text, useColorModeValue } from '@chakra-ui/react';
 import { IoWallet } from 'react-icons/io5';
 import { ConnectWalletType } from '../types';
 import { FiAlertTriangle } from 'react-icons/fi';
@@ -12,29 +11,48 @@ export const ConnectWalletButton = ({
   icon,
   onClickConnectBtn,
 }: ConnectWalletType) => (
-  <Button
-    w="full"
-    minW="fit-content"
-    size="lg"
-    isLoading={isLoading}
-    isDisabled={isDisabled}
-    bgImage="linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)"
-    color="white"
-    opacity={1}
-    transition="all .5s ease-in-out"
-    _hover={{
-      bgImage: 'linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)',
-      opacity: 0.75,
+  <button
+    style={{
+      width: '100%',
+      minWidth: 'fit-content',
+      height: '48px',
+      borderRadius: '8px',
+      backgroundColor: '#9D4BC7',
+      backgroundImage:
+        'linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)',
+      color: 'white',
+      border: 'none',
+      cursor: isDisabled ? 'not-allowed' : 'pointer',
+      opacity: isDisabled ? 0.6 : 1,
+      transition: 'all .5s ease-in-out',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '16px',
+      fontWeight: '500',
     }}
-    _active={{
-      bgImage: 'linear-gradient(109.6deg, rgba(157,75,199,1) 11.2%, rgba(119,81,204,1) 83.1%)',
-      opacity: 0.9,
-    }}
+    disabled={isDisabled}
     onClick={onClickConnectBtn}
   >
-    <Icon as={icon ? icon : IoWallet} mr={2} />
+    {isLoading ? (
+      <div
+        style={{
+          width: '20px',
+          height: '20px',
+          borderRadius: '50%',
+          border: '2px solid white',
+          borderTopColor: 'transparent',
+          animation: 'spin 1s linear infinite',
+          marginRight: '8px',
+        }}
+      />
+    ) : icon ? (
+      React.createElement(icon)
+    ) : (
+      <IoWallet style={{ marginRight: '8px' }} />
+    )}
     {buttonText ? buttonText : 'Connect Wallet'}
-  </Button>
+  </button>
 );
 
 export const Disconnected = ({
@@ -63,26 +81,29 @@ export const Rejected = ({
   buttonText: string;
   wordOfWarning?: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
-}) => {
-  const bg = useColorModeValue('orange.200', 'orange.300');
-
-  return (
-    <Stack>
-      <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />
-      {wordOfWarning && (
-        <Stack isInline={true} borderRadius="md" bg={bg} color="blackAlpha.900" p={4} spacing={1}>
-          <Icon as={FiAlertTriangle} mt={1} />
-          <Text>
-            <Text fontWeight="semibold" as="span">
-              Warning:&ensp;
-            </Text>
-            {wordOfWarning}
-          </Text>
-        </Stack>
-      )}
-    </Stack>
-  );
-};
+}) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />
+    {wordOfWarning && (
+      <div
+        style={{
+          display: 'flex',
+          borderRadius: '8px',
+          backgroundColor: '#ED8936',
+          color: '#1A202C',
+          padding: '16px',
+          gap: '4px',
+        }}
+      >
+        <FiAlertTriangle style={{ marginTop: '4px' }} />
+        <div>
+          <span style={{ fontWeight: '600' }}>Warning:&ensp;</span>
+          {wordOfWarning}
+        </div>
+      </div>
+    )}
+  </div>
+);
 
 export const Error = ({
   buttonText,
@@ -92,26 +113,29 @@ export const Error = ({
   buttonText: string;
   wordOfWarning?: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
-}) => {
-  const bg = useColorModeValue('orange.200', 'orange.300');
-
-  return (
-    <Stack>
-      <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />
-      {wordOfWarning && (
-        <Stack isInline={true} borderRadius="md" bg={bg} color="blackAlpha.900" p={4} spacing={1}>
-          <Icon as={FiAlertTriangle} mt={1} />
-          <Text>
-            <Text fontWeight="semibold" as="span">
-              Warning:&ensp;
-            </Text>
-            {wordOfWarning}
-          </Text>
-        </Stack>
-      )}
-    </Stack>
-  );
-};
+}) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />
+    {wordOfWarning && (
+      <div
+        style={{
+          display: 'flex',
+          borderRadius: '8px',
+          backgroundColor: '#ED8936',
+          color: '#1A202C',
+          padding: '16px',
+          gap: '4px',
+        }}
+      >
+        <FiAlertTriangle style={{ marginTop: '4px' }} />
+        <div>
+          <span style={{ fontWeight: '600' }}>Warning:&ensp;</span>
+          {wordOfWarning}
+        </div>
+      </div>
+    )}
+  </div>
+);
 
 export const NotExist = ({
   buttonText,

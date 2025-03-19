@@ -43,7 +43,8 @@ export function useAA(
       if (!client) {
         return;
       }
-      const newClient = new SocialRecoveryClient(client, address, contractAddressLocal);
+      const typedClient = client as unknown as any;
+      const newClient = new SocialRecoveryClient(typedClient, address, contractAddressLocal);
       setSigningClient(newClient);
     });
   }, [address, contractAddressLocal, getSigningCosmWasmClient]);

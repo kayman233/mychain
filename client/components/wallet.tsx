@@ -1,5 +1,4 @@
 import { useChain } from '@cosmos-kit/react';
-import { Box, Center, Grid, GridItem, Icon, Stack, useColorMode } from '@chakra-ui/react';
 import { WalletStatus } from '@cosmos-kit/core';
 import { MouseEventHandler, useEffect } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
@@ -48,7 +47,6 @@ export const WalletSection = ({
   const { connect, openView, status, username, address, message, wallet } = useChain(
     providedChainName || defaultChainName
   );
-  const { colorMode } = useColorMode();
 
   // Events
   const onClickConnect: MouseEventHandler = async e => {
@@ -79,13 +77,13 @@ export const WalletSection = ({
       walletStatus={status}
       rejected={
         <RejectedWarn
-          icon={<Icon as={FiAlertTriangle} mt={1} />}
+          icon={<FiAlertTriangle style={{ marginTop: '4px' }} />}
           wordOfWarning={`${wallet?.prettyName}: ${message}`}
         />
       }
       error={
         <RejectedWarn
-          icon={<Icon as={FiAlertTriangle} mt={1} />}
+          icon={<FiAlertTriangle style={{ marginTop: '4px' }} />}
           wordOfWarning={`${wallet?.prettyName}: ${message}`}
         />
       }
@@ -121,50 +119,36 @@ export const WalletSection = ({
   );
 
   return (
-    <Center py={16}>
-      <Grid
-        w="full"
-        maxW="sm"
-        templateColumns="1fr"
-        rowGap={4}
-        alignItems="center"
-        justifyContent="center"
-      >
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
+      <div style={{ width: '100%', maxWidth: '384px' }}>
         {!providedChainName && isMultiChain ? (
           <ConnectWalletButton buttonText={'Connect Wallet'} isDisabled />
         ) : (
-          <GridItem px={6}>
-            <Stack
-              justifyContent="center"
-              alignItems="center"
-              borderRadius="lg"
-              bg={colorMode === 'light' ? 'white' : 'blackAlpha.400'}
-              boxShadow={
-                colorMode === 'light'
-                  ? '0 0 2px #dfdfdf, 0 0 6px -2px #d3d3d3'
-                  : '0 0 2px #363636, 0 0 8px -2px #4f4f4f'
-              }
-              spacing={4}
-              px={4}
-              py={{ base: 6, md: 12 }}
+          <div style={{ padding: '0 24px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                boxShadow: '0 0 2px #dfdfdf, 0 0 6px -2px #d3d3d3',
+                gap: '16px',
+                padding: '16px',
+              }}
             >
               {userInfo}
               {userBalance}
               {addressBtn}
-              <Box w="full" maxW={{ base: 52, md: 64 }}>
-                {connectWalletButton}
-              </Box>
-              <Box w="full" maxW={{ base: 52, md: 64 }}>
-                {createBtn}
-              </Box>
-              <Box w="full" maxW={{ base: 52, md: 64 }}>
-                {sendBtn}
-              </Box>
-              {connectWalletWarn && <GridItem>{connectWalletWarn}</GridItem>}
-            </Stack>
-          </GridItem>
+              <div style={{ width: '100%', maxWidth: '256px' }}>{connectWalletButton}</div>
+              <div style={{ width: '100%', maxWidth: '256px' }}>{createBtn}</div>
+              <div style={{ width: '100%', maxWidth: '256px' }}>{sendBtn}</div>
+              {connectWalletWarn && <div>{connectWalletWarn}</div>}
+            </div>
+          </div>
         )}
-      </Grid>
-    </Center>
+      </div>
+    </div>
   );
 };

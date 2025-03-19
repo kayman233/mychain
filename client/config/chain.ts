@@ -1,14 +1,15 @@
 export const chain = {
   $schema: '../../chain.schema.json',
   chain_name: 'gmrollup',
+  chain_type: 'cosmos' as const,
   chain_id: 'mychain',
   pretty_name: 'Mychain',
-  status: 'live',
-  network_type: 'testnet',
+  status: 'live' as const,
+  network_type: 'testnet' as const,
   bech32_prefix: 'cosmos',
   daemon_name: 'mychaind',
   node_home: '$HOME/.mychain',
-  key_algos: ['secp256k1'],
+  key_algos: ['secp256k1'] as ('secp256k1' | 'ed25519' | 'sr25519' | 'ethsecp256k1' | 'bn254')[],
   slip44: 118,
   fees: {
     fee_tokens: [

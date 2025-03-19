@@ -1,5 +1,4 @@
 import React, { ReactNode } from 'react';
-import { Box, Stack, Text, useColorModeValue } from '@chakra-ui/react';
 import { WalletStatus } from '@cosmos-kit/core';
 
 export const WarnBlock = ({
@@ -9,47 +8,30 @@ export const WarnBlock = ({
   wordOfWarning?: string;
   icon?: ReactNode;
 }) => (
-  <Box
-    borderRadius="md"
-    p={4}
-    pr={2}
-    bg={useColorModeValue('orange.200', 'orange.300')}
-    color="blackAlpha.900"
+  <div
+    style={{
+      borderRadius: '8px',
+      padding: '16px',
+      paddingRight: '8px',
+      backgroundColor: '#ED8936',
+      color: '#1A202C',
+    }}
   >
-    <Stack
-      isInline={true}
-      spacing={2}
-      alignItems="start"
-      justifyContent="center"
-      w="full"
-      overflowY="scroll"
-      css={{
-        // For Firefox
-        scrollbarWidth: 'auto',
-        scrollbarColor: useColorModeValue(
-          'rgba(0,0,0,0.3) rgba(0,0,0,0.2)',
-          'rgba(255,255,255,0.2) rgba(255,255,255,0.1)'
-        ),
-        // For Chrome and other browsers except Firefox
-        '&::-webkit-scrollbar': {
-          width: '14px',
-          background: useColorModeValue('rgba(220,220,220,0.1)', 'rgba(60,60,60,0.1)'),
-          borderRadius: '3px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: useColorModeValue('rgba(0,0,0,0.1)', 'rgba(255,255,255,0.1)'),
-          borderRadius: '10px',
-          border: '3px solid transparent',
-          backgroundClip: 'content-box',
-        },
+    <div
+      style={{
+        display: 'flex',
+        gap: '8px',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        width: '100%',
+        overflowY: 'scroll',
+        maxHeight: '160px',
       }}
     >
-      <Box position="sticky" top={0}>
-        {icon}
-      </Box>
-      <Text maxH={40}>{wordOfWarning}</Text>
-    </Stack>
-  </Box>
+      <div style={{ position: 'sticky', top: 0 }}>{icon}</div>
+      <div>{wordOfWarning}</div>
+    </div>
+  </div>
 );
 
 export const RejectedWarn = ({

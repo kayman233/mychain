@@ -1,5 +1,4 @@
 import { useChain } from '@cosmos-kit/react';
-import { Center, Grid, GridItem, Stack, useColorMode } from '@chakra-ui/react';
 
 import { defaultChainName } from '../config';
 import { AccountInfoType } from '../hooks/types';
@@ -25,7 +24,6 @@ export const AbstractAccountSection = ({
   handleRevoke?: () => Promise<void>;
 }) => {
   const { address: addressUser } = useChain(defaultChainName);
-  const { colorMode } = useColorMode();
 
   if (!info || !address || address.length === 0) {
     return <></>;
@@ -45,38 +43,30 @@ export const AbstractAccountSection = ({
   );
 
   return (
-    <Center py={16}>
-      <Grid
-        w="full"
-        maxW="sm"
-        templateColumns="1fr"
-        rowGap={4}
-        alignItems="center"
-        justifyContent="center"
-      >
-        <GridItem px={8}>
-          <Stack
-            justifyContent="center"
-            alignItems="center"
-            borderRadius="lg"
-            bg={colorMode === 'light' ? 'white' : 'blackAlpha.400'}
-            boxShadow={
-              colorMode === 'light'
-                ? '0 0 2px #dfdfdf, 0 0 6px -2px #d3d3d3'
-                : '0 0 2px #363636, 0 0 8px -2px #4f4f4f'
-            }
-            spacing={4}
-            px={4}
-            py={{ base: 6, md: 12 }}
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
+      <div style={{ width: '100%', maxWidth: '384px' }}>
+        <div style={{ padding: '0 32px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: '8px',
+              backgroundColor: 'white',
+              boxShadow: '0 0 2px #dfdfdf, 0 0 6px -2px #d3d3d3',
+              gap: '16px',
+              padding: '16px',
+            }}
           >
             {userInfo}
             {userBalance}
             <ConnectedShowAddress address={address} isLoading={false} />
             <InfoAccordion info={info} />
             {recoveryBtn}
-          </Stack>
-        </GridItem>
-      </Grid>
-    </Center>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
