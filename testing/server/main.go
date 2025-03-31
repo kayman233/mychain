@@ -9,8 +9,8 @@ import (
 
 	"log"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 
 	"context"
 	"errors"
@@ -94,8 +94,6 @@ func handleSend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }
@@ -121,26 +119,41 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }
 
 func main() {
-	cors := handlers.CORS(
-		handlers.AllowedHeaders([]string{"content-type"}),
-		handlers.AllowedOrigins([]string{"*"}),
-		handlers.AllowCredentials(),
-	)
-
 	router := mux.NewRouter()
-	router.HandleFunc("/send", handleSend).Methods("POST", "OPTIONS")
-	router.HandleFunc("/create", handleCreate).Methods("POST", "OPTIONS")
-	router.Use(cors)
+	router.HandleFunc("/send", handleSend).Methods("POST")
+	router.HandleFunc("/create", handleCreate).Methods("POST")
+
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:3000"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{
+			"Content-Type",
+			"Authorization",
+			"X-Requested-With",
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Headers",
+			"Access-Control-Allow-Methods",
+			"Access-Control-Allow-Credentials",
+			"Access-Control-Max-Age",
+		},
+		ExposedHeaders: []string{
+			"Content-Type",
+			"Access-Control-Allow-Origin",
+		},
+		AllowCredentials: true,
+		MaxAge: 86400,
+		Debug: true,
+	})
+
+	handler := c.Handler(router)
 
 	log.Println("Server listening on :8080...")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }
 
 type Body struct {
