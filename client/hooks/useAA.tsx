@@ -7,6 +7,7 @@ import {
   ArrayOfVotesResponse,
   GuardiansListResp,
 } from '../codegen/SocialRecovery.types';
+import { AccountsState, StoredAccount } from './types';
 
 // to wait until the tx is in the block
 export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -26,30 +27,43 @@ export function useAA(
   const [votes, setVotes] = useState<ArrayOfVotesResponse | null>(null);
   const [counts, setCounts] = useState<ArrayOfCountsResponse | null>(null);
 
-  const [contractAddressLocal, setLocalContractAddress] = useState<string>('');
+  const [accountsState, setAccountsState] = useState<AccountsState>({
+    accounts: [],
+    selectedAccount: null,
+  });
 
   useEffect(() => {
-    const contractAddressFromLocal = localStorage.getItem('contractAddress');
-    if (contractAddressFromLocal) {
-      setLocalContractAddress(contractAddressFromLocal);
+    if (typeof window !== 'undefined') {
+      const storedAccounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+      console.log('storedAccounts', storedAccounts);
+      setAccountsState({
+        accounts: storedAccounts,
+        selectedAccount: storedAccounts[0] || null,
+      });
     }
-  }, [contractAddress]);
+  }, []);
 
   useEffect(() => {
-    if (!address || contractAddressLocal.length === 0) {
+    if (!address || !accountsState.selectedAccount) {
       return;
     }
+
     getSigningCosmWasmClient().then(client => {
       if (!client) {
         return;
       }
-      const newClient = new SocialRecoveryClient(client, address, contractAddressLocal);
+      const newClient = new SocialRecoveryClient(
+        client,
+        address,
+        accountsState.selectedAccount?.contractAddress || ''
+      );
       setSigningClient(newClient);
     });
-  }, [address, contractAddressLocal, getSigningCosmWasmClient]);
+  }, [address, accountsState.selectedAccount, getSigningCosmWasmClient]);
 
   useEffect(() => {
     if (signingClient) {
+      console.log('signingClient', signingClient);
       signingClient.pubkey().then(res => setPubkey(res));
       signingClient.threshold().then(res => setThreshold(res));
       signingClient.guardiansList().then(res => {
@@ -89,11 +103,20 @@ export function useAA(
     return result.transactionHash as any;
   }, [address, signingClient, setTxHash]);
 
+  const selectAccount = useCallback((account: StoredAccount) => {
+    setAccountsState(prev => ({
+      ...prev,
+      selectedAccount: account,
+    }));
+  }, []);
+
   return {
     accountInfo: { pubkey, threshold, guardians, counts, votes },
     isGuardian,
     txHash,
-    contractAddressLocal,
+    accounts: accountsState.accounts,
+    selectedAccount: accountsState.selectedAccount,
+    selectAccount,
     handleRecover,
     handleRevoke,
   };

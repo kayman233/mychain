@@ -1,8 +1,8 @@
 import { useChain } from '@cosmos-kit/react';
-import { Center, Grid, GridItem, Stack, useColorMode } from '@chakra-ui/react';
+import { Center, Grid, GridItem, Stack, useColorMode, Select } from '@chakra-ui/react';
 
 import { defaultChainName } from '../config';
-import { AccountInfoType } from '../hooks/types';
+import { AccountInfoType, StoredAccount } from '../hooks/types';
 import { ConnectedUserBalanceInfo } from './react/user-balance';
 import { ConnectedUserInfo } from './react/user-card';
 import { ConnectedShowAddress } from './react/address-card';
@@ -16,6 +16,9 @@ export const AbstractAccountSection = ({
   address,
   handleRecover,
   handleRevoke,
+  accounts,
+  selectedAccount,
+  selectAccount,
 }: {
   info?: AccountInfoType;
   accountBalance?: string;
@@ -23,9 +26,15 @@ export const AbstractAccountSection = ({
   isGuardian?: boolean;
   handleRecover?: (newPubkey: string | undefined) => Promise<void>;
   handleRevoke?: () => Promise<void>;
+  accounts: StoredAccount[];
+  selectedAccount: StoredAccount | null;
+  selectAccount: (account: StoredAccount) => void;
 }) => {
   const { address: addressUser } = useChain(defaultChainName);
   const { colorMode } = useColorMode();
+
+  console.log('info', info);
+  console.log('address', address);
 
   if (!info || !address || address.length === 0) {
     return <></>;
@@ -69,6 +78,21 @@ export const AbstractAccountSection = ({
             px={4}
             py={{ base: 6, md: 12 }}
           >
+            <Select
+              value={selectedAccount?.contractAddress || ''}
+              onChange={e => {
+                const account = accounts.find(a => a.contractAddress === e.target.value);
+                if (account) {
+                  selectAccount(account);
+                }
+              }}
+            >
+              {accounts.map(account => (
+                <option key={account.contractAddress} value={account.contractAddress}>
+                  {account.username} ({account.contractAddress.slice(0, 8)}...)
+                </option>
+              ))}
+            </Select>
             {userInfo}
             {userBalance}
             <ConnectedShowAddress address={address} isLoading={false} />

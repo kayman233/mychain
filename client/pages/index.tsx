@@ -29,13 +29,17 @@ export default function Home() {
   };
 
   const { handleCreateAA, contractAddress } = useCreateAA(setTxHash);
-  const { accountInfo, isGuardian, contractAddressLocal, handleRecover, handleRevoke } = useAA(
-    contractAddress,
-    txHash,
-    setTxHash
-  );
+  const {
+    accountInfo,
+    isGuardian,
+    accounts,
+    selectedAccount,
+    selectAccount,
+    handleRecover,
+    handleRevoke,
+  } = useAA(contractAddress, txHash, setTxHash);
   const { balance, accountBalance, handleSend, handleSendAA } = useBalances(
-    contractAddressLocal,
+    selectedAccount?.contractAddress || '',
     txHash,
     setTxHash
   );
@@ -63,14 +67,17 @@ export default function Home() {
           info={accountInfo as AccountInfoType}
           isGuardian={isGuardian}
           accountBalance={accountBalance}
-          address={contractAddressLocal}
+          address={selectedAccount?.contractAddress || ''}
+          accounts={accounts}
+          selectedAccount={selectedAccount}
+          selectAccount={selectAccount}
           handleRecover={handleRecover}
           handleRevoke={handleRevoke}
         />
         <WalletSection
           isMultiChain={false}
           balance={balance}
-          contractAddress={contractAddressLocal}
+          contractAddress={selectedAccount?.contractAddress || ''}
           handleCreate={handleCreateAA}
           handleSend={handleSend}
           handleSendAA={handleSendAA}

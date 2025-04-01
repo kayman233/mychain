@@ -7,7 +7,7 @@ import axios from 'axios';
 import { getSigningAbstractaccountClient } from '../codegen/codegen';
 import { InstantiateMsg } from '../codegen/SocialRecovery.types';
 import { Event } from '../codegen/codegen/tendermint/abci/types';
-import { CreateAccountType } from './types';
+import { CreateAccountType, StoredAccount } from './types';
 
 type CreateResponse = {
   result: string;
@@ -16,7 +16,7 @@ type CreateResponse = {
 };
 
 export function useCreateAA(setTxHash: (v: string) => void) {
-  const { address, getOfflineSigner } = useChain(defaultChainName);
+  const { address, username, getOfflineSigner } = useChain(defaultChainName);
 
   const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(
     null
@@ -42,7 +42,7 @@ export function useCreateAA(setTxHash: (v: string) => void) {
   const handleCreateAA = useCallback(
     async (params: CreateAccountType) => {
       const { funds, guardians, threshold } = params;
-      if (!funds || !guardians || !threshold || !address || !signingClientCosmos) {
+      if (!funds || !guardians || !threshold || !address || !signingClientCosmos || !username) {
         return;
       }
 
@@ -99,13 +99,24 @@ export function useCreateAA(setTxHash: (v: string) => void) {
 
       const resContractAddress = Buffer.from(attr.value).toString();
 
+      // Сохраняем информацию об аккаунте
+      const storedAccount: StoredAccount = {
+        address,
+        contractAddress: resContractAddress,
+        username,
+        createdAt: new Date().toISOString(),
+      };
+
+      const storedAccounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+      storedAccounts.push(storedAccount);
+      localStorage.setItem('accounts', JSON.stringify(storedAccounts));
+
       setContractAddress(resContractAddress);
-      localStorage.setItem('contractAddress', resContractAddress);
       setTxHash(res.data.txHash);
 
       return res.data.txHash as any;
     },
-    [address, setContractAddress, setTxHash, signingClientCosmos]
+    [address, username, setContractAddress, setTxHash, signingClientCosmos]
   );
 
   return { contractAddress, handleCreateAA };
