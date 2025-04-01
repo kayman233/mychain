@@ -73,6 +73,29 @@ type MsgRegisterAccount struct {
 	Salt []byte `protobuf:"bytes,5,opt,name=salt,proto3" json:"salt,omitempty"`
 }
 
+type ExecuteData struct {
+	Sender    string          `json:"sender"`
+	Contract  string          `json:"contract"`
+	Msg       json.RawMessage `json:"msg"`
+	User      string          `json:"user"`
+}
+
+type ExecuteMessage struct {
+	Type      string          `json:"@type"`
+	Sender    string          `json:"sender"`
+	Contract  string          `json:"contract"`
+	Msg       json.RawMessage `json:"msg"`
+	Funds     []interface{}   `json:"funds"`
+}
+
+type ExecuteBody struct {
+	Messages                    []interface{} `json:"messages"`
+	Memo                        string        `json:"memo"`
+	TimeoutHeight               string        `json:"timeout_height"`
+	ExtensionOptions            []string      `json:"extension_options"`
+	NonCriticalExtensionOptions []string      `json:"non_critical_extension_options"`
+}
+
 func handleSend(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -123,10 +146,36 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
+func handleExecute(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var data ExecuteData
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	res := executeSignAndBroadcast(data)
+
+	response, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+}
+
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/send", handleSend).Methods("POST")
 	router.HandleFunc("/create", handleCreate).Methods("POST")
+	router.HandleFunc("/execute", handleExecute).Methods("POST")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:3000"},
@@ -618,4 +667,156 @@ func getSingerOfTxDefault(queryClient authtypes.QueryClient, stdTx sdk.Tx) (*aut
 	}
 
 	return acc, nil
+}
+
+func getExecuteData(data ExecuteData) []byte {
+	msg := &ExecuteMessage{
+		Type:     "/cosmwasm.wasm.v1.MsgExecuteContract",
+		Sender:   data.Sender,
+		Contract: data.Contract,
+		Msg:      data.Msg,
+		Funds:    []interface{}{},
+	}
+
+	body := ExecuteBody{
+		Messages:                    []interface{}{msg},
+		Memo:                        "",
+		TimeoutHeight:               "0",
+		ExtensionOptions:            []string{},
+		NonCriticalExtensionOptions: []string{},
+	}
+
+	authInfo := AuthInfo{
+		SignerInfos: []string{},
+		Fee: Fee{
+			Amount:   []string{},
+			GasLimit: "1000000",
+			Payer:    "",
+			Granter:  "",
+		},
+		Tip: nil,
+	}
+
+	response := map[string]interface{}{
+		"body":      body,
+		"auth_info": authInfo,
+	}
+
+	resJSON, err := json.Marshal(response)
+	if err != nil {
+		panic(err)
+	}
+
+	return resJSON
+}
+
+func executeSignAndBroadcast(data ExecuteData) interface{} {
+	encCfg := simapp.MakeEncodingConfig()
+
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+
+	keybase, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, dirname+rootDir, os.Stdin, encCfg.Codec)
+	if err != nil {
+		panic(err)
+	}
+
+	conn, err := grpc.Dial(grpcURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+
+	queryClient := authtypes.NewQueryClient(conn)
+
+	txBz := getExecuteData(data)
+
+	stdTx, err := encCfg.TxConfig.TxJSONDecoder()(txBz)
+	if err != nil {
+		panic(err)
+	}
+
+	signerAcc, err := getSingerOfTx(queryClient, stdTx)
+	if err != nil {
+		panic(err)
+	}
+
+	signerData := authsigning.SignerData{
+		Address:       signerAcc.GetAddress().String(),
+		ChainID:       chainID,
+		AccountNumber: signerAcc.GetAccountNumber(),
+		Sequence:      signerAcc.GetSequence(),
+		PubKey:        signerAcc.GetPubKey(),
+	}
+
+	txBuilder, err := encCfg.TxConfig.WrapTxBuilder(stdTx)
+	if err != nil {
+		panic(err)
+	}
+
+	sigData := signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: nil,
+	}
+
+	sig := signing.SignatureV2{
+		PubKey:   signerAcc.GetPubKey(),
+		Data:     &sigData,
+		Sequence: signerAcc.GetSequence(),
+	}
+
+	if err := txBuilder.SetSignatures(sig); err != nil {
+		panic(err)
+	}
+
+	signBytes, err := encCfg.TxConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	if err != nil {
+		panic(err)
+	}
+
+	sigBytes, _, err := keybase.Sign(data.User, signBytes)
+	if err != nil {
+		panic(err)
+	}
+
+	sigData = signing.SingleSignatureData{
+		SignMode:  signMode,
+		Signature: sigBytes,
+	}
+
+	sig = signing.SignatureV2{
+		PubKey:   signerAcc.GetPubKey(),
+		Data:     &sigData,
+		Sequence: signerAcc.GetSequence(),
+	}
+
+	if err := txBuilder.SetSignatures(sig); err != nil {
+		panic(err)
+	}
+
+	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+
+	txClient := tx.NewServiceClient(conn)
+
+	grpcRes, err := txClient.BroadcastTx(
+		context.Background(),
+		&tx.BroadcastTxRequest{
+			Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
+		},
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if grpcRes.TxResponse.Code != 0 {
+		return map[string]string{"result": "fail"}
+	}
+
+	return map[string]string{
+		"result": "success",
+		"txHash": grpcRes.TxResponse.TxHash,
+	}
 }
