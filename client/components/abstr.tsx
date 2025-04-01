@@ -107,7 +107,7 @@ export const AbstractAccountSection = ({
             {userInfo}
             {userBalance}
             <ConnectedShowAddress address={address} isLoading={false} />
-            <InfoAccordion info={info} />
+            <InfoAccordion info={info} isGuardian={isGuardian || false} />
             {recoveryBtn}
           </Stack>
         </GridItem>

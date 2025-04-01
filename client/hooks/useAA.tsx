@@ -5,6 +5,7 @@ import { SocialRecoveryClient } from '../codegen/SocialRecovery.client';
 import {
   ArrayOfCountsResponse,
   ArrayOfVotesResponse,
+  ArrayOfKeyValueResponse,
   GuardiansListResp,
 } from '../codegen/SocialRecovery.types';
 import { AccountsState, StoredAccount } from './types';
@@ -34,6 +35,7 @@ export function useAA(
   const [guardians, setGuardians] = useState<GuardiansListResp | null>(null);
   const [votes, setVotes] = useState<ArrayOfVotesResponse | null>(null);
   const [counts, setCounts] = useState<ArrayOfCountsResponse | null>(null);
+  const [data, setData] = useState<ArrayOfKeyValueResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const [accountsState, setAccountsState] = useState<AccountsState>({
@@ -151,13 +153,15 @@ export function useAA(
       const client = await initClient();
       if (!client || !address) return;
 
-      const [pubkeyRes, thresholdRes, guardiansRes, countsRes, votesRes] = await Promise.all([
-        client.pubkey(),
-        client.threshold(),
-        client.guardiansList(),
-        client.counts(),
-        client.votes(),
-      ]);
+      const [pubkeyRes, thresholdRes, guardiansRes, countsRes, votesRes, dataRes] =
+        await Promise.all([
+          client.pubkey(),
+          client.threshold(),
+          client.guardiansList(),
+          client.counts(),
+          client.votes(),
+          client.getAllData(),
+        ]);
 
       setPubkey(pubkeyRes);
       setThreshold(thresholdRes);
@@ -168,6 +172,7 @@ export function useAA(
       }
       setCounts(countsRes);
       setVotes(votesRes);
+      setData(dataRes);
     } catch (error) {
       console.error('Error updating account info:', error);
     } finally {
@@ -231,20 +236,37 @@ export function useAA(
   );
 
   const handleRevoke = useCallback(async () => {
-    if (!address) return;
-
+    setIsLoading(true);
     try {
       const client = await initClient();
-      if (!client) return;
+      if (!client || !address) return;
 
-      const result = await client.revoke({ gas: '1000000', amount: [] });
-      await delay(3000);
+      const result = await client.revoke();
       setTxHash(result.transactionHash);
-      return result.transactionHash as any;
     } catch (error) {
-      console.error('Error in handleRevoke:', error);
+      console.error('Error revoking:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [address, initClient, setTxHash]);
+  }, [initClient, address, setTxHash]);
+
+  const handleSetData = useCallback(
+    async (key: string, value: string) => {
+      setIsLoading(true);
+      try {
+        const client = await initClient();
+        if (!client || !address) return;
+
+        const result = await client.storeData({ key, value }, { gas: '1000000', amount: [] });
+        setTxHash(result.transactionHash);
+      } catch (error) {
+        console.error('Error setting data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [initClient, address, setTxHash]
+  );
 
   const selectAccount = useCallback((account: StoredAccount) => {
     setAccountsState(prev => ({
@@ -254,7 +276,7 @@ export function useAA(
   }, []);
 
   return {
-    accountInfo: { pubkey, threshold, guardians, counts, votes },
+    accountInfo: { pubkey, threshold, guardians, counts, votes, data },
     isGuardian,
     txHash,
     accounts: accountsState.accounts,
@@ -262,6 +284,8 @@ export function useAA(
     selectAccount,
     handleRecover,
     handleRevoke,
+    handleSetData,
+    updateAccountInfo,
     isLoading,
   };
 }

@@ -25,6 +25,7 @@ import { ConnectedUserBalanceInfo } from './react/user-balance';
 import { CreateAAButton } from './react/create-aa';
 import { CreateAccountType } from '../hooks/types';
 import { SendButton } from './react/send';
+import { SetDataButton } from './react/set-data';
 
 export const WalletSection = ({
   isMultiChain,
@@ -35,6 +36,7 @@ export const WalletSection = ({
   setChainName,
   handleSend,
   handleSendAA,
+  handleSetData,
 }: {
   isMultiChain: boolean;
   balance?: string;
@@ -44,6 +46,7 @@ export const WalletSection = ({
   setChainName?: (chainName: ChainName | undefined) => void;
   handleSend?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
   handleSendAA?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
+  handleSetData?: (key: string, value: string) => Promise<void>;
 }) => {
   const { connect, openView, status, username, address, message, wallet } = useChain(
     providedChainName || defaultChainName
@@ -120,6 +123,10 @@ export const WalletSection = ({
     />
   );
 
+  const setDataBtn = handleSetData && (
+    <SetDataButton isDisabled={status !== WalletStatus.Connected} handleSetData={handleSetData} />
+  );
+
   return (
     <Center py={16}>
       <Grid
@@ -159,6 +166,9 @@ export const WalletSection = ({
               </Box>
               <Box w="full" maxW={{ base: 52, md: 64 }}>
                 {sendBtn}
+              </Box>
+              <Box w="full" maxW={{ base: 52, md: 64 }}>
+                {setDataBtn}
               </Box>
               {connectWalletWarn && <GridItem>{connectWalletWarn}</GridItem>}
             </Stack>

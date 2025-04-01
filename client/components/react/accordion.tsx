@@ -9,14 +9,33 @@ import {
   OrderedList,
   UnorderedList,
 } from '@chakra-ui/react';
-import { AccountInfoType } from '../../hooks/types';
 import { ConnectedShowAddress } from './address-card';
+import {
+  GuardiansListResp,
+  ArrayOfCountsResponse,
+  ArrayOfVotesResponse,
+  ArrayOfKeyValueResponse,
+} from '../../codegen/SocialRecovery.types';
 
-export const InfoAccordion = ({ info }: { info: AccountInfoType }) => {
-  const votes = info?.counts?.map(count => ({
-    voters: info.votes?.filter(vote => vote.vote === count.pubkey),
-    count: count.votes,
+interface AccordionProps {
+  info: {
+    pubkey: string | null;
+    threshold: number | null;
+    guardians: GuardiansListResp | null;
+    counts: ArrayOfCountsResponse | null;
+    votes: ArrayOfVotesResponse | null;
+    data: ArrayOfKeyValueResponse | null;
+  };
+  isGuardian: boolean;
+}
+
+const InfoAccordion = ({ info, isGuardian }: AccordionProps) => {
+  const { pubkey, threshold, guardians, counts, votes: rawVotes, data } = info;
+
+  const processedVotes = counts?.map(count => ({
     pubkey: count.pubkey,
+    count: count.votes,
+    voters: rawVotes?.filter(vote => vote.vote === count.pubkey),
   }));
 
   return (
@@ -68,11 +87,11 @@ export const InfoAccordion = ({ info }: { info: AccountInfoType }) => {
           </AccordionButton>
         </h2>
         <AccordionPanel pb={4}>
-          {!votes || votes?.length === 0 ? (
+          {!processedVotes || processedVotes?.length === 0 ? (
             <>No votes</>
           ) : (
             <OrderedList>
-              {votes?.map(vote => (
+              {processedVotes?.map(vote => (
                 <ListItem key={vote.pubkey} alignItems="center">
                   <Text fontSize="sm" fontWeight="semibold" width="100%" marginBottom="1">
                     New pubkey :
@@ -99,6 +118,36 @@ export const InfoAccordion = ({ info }: { info: AccountInfoType }) => {
           )}
         </AccordionPanel>
       </AccordionItem>
+      <AccordionItem key="data">
+        <h2>
+          <AccordionButton justifyContent="center">
+            <Text fontSize="sm" fontWeight="semibold">
+              Stored Data
+            </Text>
+            <AccordionIcon />
+          </AccordionButton>
+        </h2>
+        <AccordionPanel pb={4}>
+          {!data || data?.length === 0 ? (
+            <>No stored data</>
+          ) : (
+            <OrderedList>
+              {data?.map(item => (
+                <ListItem key={item.key} alignItems="center" marginBottom="4">
+                  <Text fontSize="sm" fontWeight="semibold" width="100%" marginBottom="1">
+                    Key: {item.key}
+                  </Text>
+                  <Text fontSize="sm" width="100%" marginBottom="1" wordBreak="break-all">
+                    Value: {item.value}
+                  </Text>
+                </ListItem>
+              ))}
+            </OrderedList>
+          )}
+        </AccordionPanel>
+      </AccordionItem>
     </Accordion>
   );
 };
+
+export { InfoAccordion };

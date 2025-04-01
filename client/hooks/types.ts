@@ -2,6 +2,7 @@ import {
   ArrayOfCountsResponse,
   ArrayOfVotesResponse,
   GuardiansListResp,
+  ArrayOfKeyValueResponse,
 } from '../codegen/SocialRecovery.types';
 
 export interface CreateAccountType {
@@ -16,6 +17,7 @@ export interface AccountInfoType {
   guardians: GuardiansListResp | null;
   counts: ArrayOfCountsResponse | null;
   votes: ArrayOfVotesResponse | null;
+  data: ArrayOfKeyValueResponse | null;
 }
 
 export interface StoredAccount {

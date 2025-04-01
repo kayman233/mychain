@@ -37,6 +37,7 @@ export default function Home() {
     selectAccount,
     handleRecover,
     handleRevoke,
+    handleSetData,
     updateAccountInfo,
     isLoading,
   } = useAA(contractAddress, txHash, setTxHash);
@@ -85,6 +86,7 @@ export default function Home() {
           handleCreate={handleCreateAA}
           handleSend={handleSend}
           handleSendAA={handleSendAA}
+          handleSetData={handleSetData}
         />
       </Flex>
     </Container>
