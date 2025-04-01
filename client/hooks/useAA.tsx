@@ -9,6 +9,8 @@ import {
   GuardiansListResp,
 } from '../codegen/SocialRecovery.types';
 import { AccountsState, StoredAccount } from './types';
+import axios from 'axios';
+import { defaultBackendEndpoint } from '../config';
 
 // to wait until the tx is in the block
 export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -27,7 +29,7 @@ export function useAA(
   txHash: string,
   setTxHash: (v: string) => void
 ) {
-  const { address, getSigningCosmWasmClient } = useChain(defaultChainName);
+  const { address, username, getSigningCosmWasmClient } = useChain(defaultChainName);
 
   const [pubkey, setPubkey] = useState<string | null>(null);
   const [threshold, setThreshold] = useState<number | null>(null);
@@ -252,20 +254,42 @@ export function useAA(
 
   const handleSetData = useCallback(
     async (key: string, value: string) => {
+      if (!accountsState.selectedAccount?.contractAddress || !address || !key || !value) {
+        return;
+      }
+
       setIsLoading(true);
       try {
-        const client = await initClient();
-        if (!client || !address) return;
+        const data = {
+          sender: accountsState.selectedAccount.contractAddress,
+          contract: accountsState.selectedAccount.contractAddress,
+          msg: {
+            store_data: {
+              key: key,
+              value: btoa(value),
+            },
+          },
+          user: username,
+        };
 
-        const result = await client.storeData({ key, value }, { gas: '1000000', amount: [] });
-        setTxHash(result.transactionHash);
+        const headers = {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        };
+
+        const response = await axios.post(`${defaultBackendEndpoint}/execute`, data, headers);
+        await delay(3000);
+        setTxHash(response.data.txHash);
+        return response.data.result;
       } catch (error) {
-        console.error('Error setting data:', error);
+        console.error('Error in handleSetData:', error);
       } finally {
         setIsLoading(false);
       }
     },
-    [initClient, address, setTxHash]
+    [accountsState.selectedAccount?.contractAddress, address, username, setTxHash]
   );
 
   const selectAccount = useCallback((account: StoredAccount) => {

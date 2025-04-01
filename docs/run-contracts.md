@@ -61,6 +61,7 @@ mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"threshold":{}}' --output j
 mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"pubkey":{}}' --output json | jq
 mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"votes":{}}' --output json | jq
 mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"counts":{}}' --output json | jq
+mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"get_all_data":{}}' --output json | jq
 ```
 
 ### To run send tx use sign/main.go, for example:

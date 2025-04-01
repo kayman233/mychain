@@ -57,14 +57,7 @@ export const AbstractAccountSection = ({
 
   return (
     <Center py={16}>
-      <Grid
-        w="full"
-        maxW="sm"
-        templateColumns="1fr"
-        rowGap={4}
-        alignItems="center"
-        justifyContent="center"
-      >
+      <Grid w="400px" templateColumns="1fr" rowGap={4} alignItems="center" justifyContent="center">
         <GridItem px={8}>
           <Stack
             justifyContent="center"
