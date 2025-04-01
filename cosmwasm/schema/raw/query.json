@@ -67,6 +67,42 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "description": "Query data by key",
+      "type": "object",
+      "required": [
+        "get_data"
+      ],
+      "properties": {
+        "get_data": {
+          "type": "object",
+          "required": [
+            "key"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Query all stored data",
+      "type": "object",
+      "required": [
+        "get_all_data"
+      ],
+      "properties": {
+        "get_all_data": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   ]
 }

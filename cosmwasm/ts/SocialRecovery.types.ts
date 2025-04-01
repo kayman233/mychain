@@ -20,6 +20,15 @@ export type ExecuteMsg = {
   };
 } | {
   revoke: {};
+} | {
+  store_data: {
+    key: string;
+    value: Binary;
+  };
+} | {
+  remove_data: {
+    key: string;
+  };
 };
 export type QueryMsg = {
   pubkey: {};
@@ -31,11 +40,22 @@ export type QueryMsg = {
   votes: {};
 } | {
   counts: {};
+} | {
+  get_data: {
+    key: string;
+  };
+} | {
+  get_all_data: {};
 };
 export type ArrayOfCountsResponse = CountsResponse[];
 export interface CountsResponse {
   pubkey: string;
   votes: number;
+}
+export type ArrayOfKeyValueResponse = KeyValueResponse[];
+export interface KeyValueResponse {
+  key: string;
+  value: Binary;
 }
 export type Addr = string;
 export interface GuardiansListResp {

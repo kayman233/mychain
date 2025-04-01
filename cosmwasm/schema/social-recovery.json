@@ -94,6 +94,54 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "description": "Store data by key",
+        "type": "object",
+        "required": [
+          "store_data"
+        ],
+        "properties": {
+          "store_data": {
+            "type": "object",
+            "required": [
+              "key",
+              "value"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "$ref": "#/definitions/Binary"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Remove data by key",
+        "type": "object",
+        "required": [
+          "remove_data"
+        ],
+        "properties": {
+          "remove_data": {
+            "type": "object",
+            "required": [
+              "key"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ],
     "definitions": {
@@ -172,6 +220,42 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "description": "Query data by key",
+        "type": "object",
+        "required": [
+          "get_data"
+        ],
+        "properties": {
+          "get_data": {
+            "type": "object",
+            "required": [
+              "key"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Query all stored data",
+        "type": "object",
+        "required": [
+          "get_all_data"
+        ],
+        "properties": {
+          "get_all_data": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ]
   },
@@ -203,6 +287,60 @@
             }
           },
           "additionalProperties": false
+        }
+      }
+    },
+    "get_all_data": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Array_of_KeyValueResponse",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/KeyValueResponse"
+      },
+      "definitions": {
+        "Binary": {
+          "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+          "type": "string"
+        },
+        "KeyValueResponse": {
+          "type": "object",
+          "required": [
+            "key",
+            "value"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/definitions/Binary"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "get_data": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "KeyValueResponse",
+      "type": "object",
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/Binary"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Binary": {
+          "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+          "type": "string"
         }
       }
     },

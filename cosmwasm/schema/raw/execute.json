@@ -57,6 +57,54 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "description": "Store data by key",
+      "type": "object",
+      "required": [
+        "store_data"
+      ],
+      "properties": {
+        "store_data": {
+          "type": "object",
+          "required": [
+            "key",
+            "value"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/definitions/Binary"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Remove data by key",
+      "type": "object",
+      "required": [
+        "remove_data"
+      ],
+      "properties": {
+        "remove_data": {
+          "type": "object",
+          "required": [
+            "key"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {
