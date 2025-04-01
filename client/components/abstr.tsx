@@ -1,5 +1,6 @@
 import { useChain } from '@cosmos-kit/react';
-import { Center, Grid, GridItem, Stack, useColorMode, Select } from '@chakra-ui/react';
+import { Center, Grid, GridItem, Stack, useColorMode, Select, Button } from '@chakra-ui/react';
+import { FaSync } from 'react-icons/fa';
 
 import { defaultChainName } from '../config';
 import { AccountInfoType, StoredAccount } from '../hooks/types';
@@ -19,6 +20,8 @@ export const AbstractAccountSection = ({
   accounts,
   selectedAccount,
   selectAccount,
+  updateAccountInfo,
+  isLoading,
 }: {
   info?: AccountInfoType;
   accountBalance?: string;
@@ -29,12 +32,11 @@ export const AbstractAccountSection = ({
   accounts: StoredAccount[];
   selectedAccount: StoredAccount | null;
   selectAccount: (account: StoredAccount) => void;
+  updateAccountInfo: () => Promise<void>;
+  isLoading: boolean;
 }) => {
   const { address: addressUser } = useChain(defaultChainName);
   const { colorMode } = useColorMode();
-
-  console.log('info', info);
-  console.log('address', address);
 
   if (!info || !address || address.length === 0) {
     return <></>;
@@ -78,6 +80,15 @@ export const AbstractAccountSection = ({
             px={4}
             py={{ base: 6, md: 12 }}
           >
+            <Button
+              leftIcon={<FaSync />}
+              onClick={updateAccountInfo}
+              isLoading={isLoading}
+              colorScheme="blue"
+              variant="outline"
+            >
+              Update Account Info
+            </Button>
             <Select
               value={selectedAccount?.contractAddress || ''}
               onChange={e => {

@@ -8,6 +8,7 @@ import { getSigningAbstractaccountClient } from '../codegen/codegen';
 import { InstantiateMsg } from '../codegen/SocialRecovery.types';
 import { Event } from '../codegen/codegen/tendermint/abci/types';
 import { CreateAccountType, StoredAccount } from './types';
+import { updateAccounts } from './useAA';
 
 type CreateResponse = {
   result: string;
@@ -107,9 +108,8 @@ export function useCreateAA(setTxHash: (v: string) => void) {
         createdAt: new Date().toISOString(),
       };
 
-      const storedAccounts = JSON.parse(localStorage.getItem('accounts') || '[]');
-      storedAccounts.push(storedAccount);
-      localStorage.setItem('accounts', JSON.stringify(storedAccounts));
+      // Используем функцию updateAccounts для обновления localStorage
+      updateAccounts(storedAccount);
 
       setContractAddress(resContractAddress);
       setTxHash(res.data.txHash);

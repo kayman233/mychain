@@ -1,6 +1,6 @@
 import { useChain } from '@cosmos-kit/react';
 import { defaultChainName } from '../config';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { SocialRecoveryClient } from '../codegen/SocialRecovery.client';
 import {
   ArrayOfCountsResponse,
@@ -12,6 +12,15 @@ import { AccountsState, StoredAccount } from './types';
 // to wait until the tx is in the block
 export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
+export const updateAccounts = (newAccount: StoredAccount) => {
+  if (typeof window === 'undefined') return;
+
+  const storedAccounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+  storedAccounts.push(newAccount);
+  localStorage.setItem('accounts', JSON.stringify(storedAccounts));
+  return storedAccounts;
+};
+
 export function useAA(
   contractAddress: string | undefined,
   txHash: string,
@@ -19,23 +28,90 @@ export function useAA(
 ) {
   const { address, getSigningCosmWasmClient } = useChain(defaultChainName);
 
-  const [signingClient, setSigningClient] = useState<SocialRecoveryClient | null>(null);
   const [pubkey, setPubkey] = useState<string | null>(null);
   const [threshold, setThreshold] = useState<number | null>(null);
   const [isGuardian, setIsGuardian] = useState<boolean>(false);
   const [guardians, setGuardians] = useState<GuardiansListResp | null>(null);
   const [votes, setVotes] = useState<ArrayOfVotesResponse | null>(null);
   const [counts, setCounts] = useState<ArrayOfCountsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [accountsState, setAccountsState] = useState<AccountsState>({
     accounts: [],
     selectedAccount: null,
   });
 
-  useEffect(() => {
+  // Храним клиенты в ref
+  const clientRef = useRef<{
+    cosmWasm: any;
+    socialRecovery: SocialRecoveryClient | null;
+  }>({
+    cosmWasm: null,
+    socialRecovery: null,
+  });
+
+  // Храним предыдущие значения для сравнения
+  const prevRef = useRef<{
+    txHash: string;
+    selectedAccount: string | null;
+  }>({
+    txHash: '',
+    selectedAccount: null,
+  });
+
+  // Таймер для дебаунса
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Функция для очистки клиента
+  const cleanupClient = useCallback(async () => {
+    try {
+      if (clientRef.current.cosmWasm) {
+        await clientRef.current.cosmWasm.disconnect();
+      }
+      clientRef.current = {
+        cosmWasm: null,
+        socialRecovery: null,
+      };
+    } catch (error) {
+      console.error('Error cleaning up client:', error);
+    }
+  }, []);
+
+  // Функция для инициализации клиента
+  const initClient = useCallback(async () => {
+    if (!address || !accountsState.selectedAccount) {
+      return null;
+    }
+
+    try {
+      await cleanupClient();
+
+      const cosmWasmClient = await getSigningCosmWasmClient();
+      if (!cosmWasmClient) return null;
+
+      const socialRecoveryClient = new SocialRecoveryClient(
+        cosmWasmClient,
+        address,
+        accountsState.selectedAccount.contractAddress
+      );
+
+      clientRef.current = {
+        cosmWasm: cosmWasmClient,
+        socialRecovery: socialRecoveryClient,
+      };
+
+      return socialRecoveryClient;
+    } catch (error) {
+      console.error('Error initializing client:', error);
+      await cleanupClient();
+      return null;
+    }
+  }, [address, accountsState.selectedAccount, cleanupClient, getSigningCosmWasmClient]);
+
+  // Функция для обновления состояния accounts
+  const updateAccountsState = useCallback(() => {
     if (typeof window !== 'undefined') {
       const storedAccounts = JSON.parse(localStorage.getItem('accounts') || '[]');
-      console.log('storedAccounts', storedAccounts);
       setAccountsState({
         accounts: storedAccounts,
         selectedAccount: storedAccounts[0] || null,
@@ -43,65 +119,132 @@ export function useAA(
     }
   }, []);
 
+  // Инициализация accounts при монтировании
   useEffect(() => {
-    if (!address || !accountsState.selectedAccount) {
+    updateAccountsState();
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      cleanupClient();
+    };
+  }, [updateAccountsState, cleanupClient]);
+
+  // Слушатель событий для обновления accounts при изменении localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'accounts') {
+        updateAccountsState();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [updateAccountsState]);
+
+  // Функция для обновления данных аккаунта
+  const updateAccountInfo = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const client = await initClient();
+      if (!client || !address) return;
+
+      const [pubkeyRes, thresholdRes, guardiansRes, countsRes, votesRes] = await Promise.all([
+        client.pubkey(),
+        client.threshold(),
+        client.guardiansList(),
+        client.counts(),
+        client.votes(),
+      ]);
+
+      setPubkey(pubkeyRes);
+      setThreshold(thresholdRes);
+      setGuardians(guardiansRes);
+      if (address) {
+        const foundGuardian = guardiansRes.guardians.includes(address);
+        setIsGuardian(foundGuardian);
+      }
+      setCounts(countsRes);
+      setVotes(votesRes);
+    } catch (error) {
+      console.error('Error updating account info:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [initClient, address]);
+
+  // Автоматическое обновление данных при изменении клиента или транзакции
+  useEffect(() => {
+    const currentSelectedAccount = accountsState.selectedAccount?.contractAddress || null;
+
+    // Проверяем, действительно ли что-то изменилось
+    if (
+      prevRef.current.txHash === txHash &&
+      prevRef.current.selectedAccount === currentSelectedAccount
+    ) {
       return;
     }
 
-    getSigningCosmWasmClient().then(client => {
-      if (!client) {
-        return;
-      }
-      const newClient = new SocialRecoveryClient(
-        client,
-        address,
-        accountsState.selectedAccount?.contractAddress || ''
-      );
-      setSigningClient(newClient);
-    });
-  }, [address, accountsState.selectedAccount, getSigningCosmWasmClient]);
+    // Обновляем предыдущие значения
+    prevRef.current = {
+      txHash,
+      selectedAccount: currentSelectedAccount,
+    };
 
-  useEffect(() => {
-    if (signingClient) {
-      console.log('signingClient', signingClient);
-      signingClient.pubkey().then(res => setPubkey(res));
-      signingClient.threshold().then(res => setThreshold(res));
-      signingClient.guardiansList().then(res => {
-        setGuardians(res);
-        if (address) {
-          const foundGuardian = res.guardians.includes(address);
-          setIsGuardian(foundGuardian);
-        }
-      });
-      signingClient.counts().then(res => setCounts(res));
-      signingClient.votes().then(res => setVotes(res));
+    // Очищаем предыдущий таймер
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
     }
-  }, [signingClient, address, txHash, contractAddress]);
+
+    // Устанавливаем новый таймер для дебаунса
+    timerRef.current = setTimeout(() => {
+      updateAccountInfo();
+    }, 1000); // Задержка в 1 секунду
+
+    // Очищаем таймер при размонтировании
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [updateAccountInfo, txHash, accountsState.selectedAccount]);
 
   const handleRecover = useCallback(
     async (newPubkey: string | undefined) => {
-      if (!signingClient || !address || !newPubkey) {
-        return;
-      }
+      if (!newPubkey || !address) return;
 
-      const result = await signingClient.recover({ newPubkey }, { gas: '1000000', amount: [] });
-      await delay(3000);
-      setTxHash(result.transactionHash);
-      return result.transactionHash as any;
+      try {
+        const client = await initClient();
+        if (!client) return;
+
+        const result = await client.recover({ newPubkey }, { gas: '1000000', amount: [] });
+        await delay(3000);
+        setTxHash(result.transactionHash);
+        return result.transactionHash as any;
+      } catch (error) {
+        console.error('Error in handleRecover:', error);
+      }
     },
-    [address, signingClient, setTxHash]
+    [address, initClient, setTxHash]
   );
 
   const handleRevoke = useCallback(async () => {
-    if (!signingClient || !address) {
-      return;
-    }
+    if (!address) return;
 
-    const result = await signingClient.revoke({ gas: '1000000', amount: [] });
-    await delay(3000);
-    setTxHash(result.transactionHash);
-    return result.transactionHash as any;
-  }, [address, signingClient, setTxHash]);
+    try {
+      const client = await initClient();
+      if (!client) return;
+
+      const result = await client.revoke({ gas: '1000000', amount: [] });
+      await delay(3000);
+      setTxHash(result.transactionHash);
+      return result.transactionHash as any;
+    } catch (error) {
+      console.error('Error in handleRevoke:', error);
+    }
+  }, [address, initClient, setTxHash]);
 
   const selectAccount = useCallback((account: StoredAccount) => {
     setAccountsState(prev => ({
@@ -119,5 +262,6 @@ export function useAA(
     selectAccount,
     handleRecover,
     handleRevoke,
+    isLoading,
   };
 }

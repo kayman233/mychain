@@ -37,6 +37,8 @@ export default function Home() {
     selectAccount,
     handleRecover,
     handleRevoke,
+    updateAccountInfo,
+    isLoading,
   } = useAA(contractAddress, txHash, setTxHash);
   const { balance, accountBalance, handleSend, handleSendAA } = useBalances(
     selectedAccount?.contractAddress || '',
@@ -73,6 +75,8 @@ export default function Home() {
           selectAccount={selectAccount}
           handleRecover={handleRecover}
           handleRevoke={handleRevoke}
+          updateAccountInfo={updateAccountInfo}
+          isLoading={isLoading}
         />
         <WalletSection
           isMultiChain={false}
