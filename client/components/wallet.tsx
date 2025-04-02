@@ -26,6 +26,7 @@ import { CreateAAButton } from './react/create-aa';
 import { CreateAccountType } from '../hooks/types';
 import { SendButton } from './react/send';
 import { SetDataButton } from './react/set-data';
+import { CreateSecretButton } from './react/create-secret';
 
 export const WalletSection = ({
   isMultiChain,
@@ -127,6 +128,13 @@ export const WalletSection = ({
     <SetDataButton isDisabled={status !== WalletStatus.Connected} handleSetData={handleSetData} />
   );
 
+  const createSecretBtn = handleSetData && (
+    <CreateSecretButton
+      isDisabled={status !== WalletStatus.Connected}
+      handleSetData={handleSetData}
+    />
+  );
+
   return (
     <Center py={16}>
       <Grid
@@ -169,6 +177,9 @@ export const WalletSection = ({
               </Box>
               <Box w="full" maxW={{ base: 52, md: 64 }}>
                 {setDataBtn}
+              </Box>
+              <Box w="full" maxW={{ base: 52, md: 64 }}>
+                {createSecretBtn}
               </Box>
               {connectWalletWarn && <GridItem>{connectWalletWarn}</GridItem>}
             </Stack>
