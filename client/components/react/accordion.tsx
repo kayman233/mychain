@@ -138,7 +138,7 @@ const InfoAccordion = ({ info, isGuardian }: AccordionProps) => {
                     Key: {item.key}
                   </Text>
                   <Text fontSize="sm" width="100%" marginBottom="1" wordBreak="break-all">
-                    Value: {item.value}
+                    Value: {atob(item.value)}
                   </Text>
                 </ListItem>
               ))}
