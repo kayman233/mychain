@@ -6,7 +6,7 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { Binary, InstantiateMsg, ExecuteMsg, QueryMsg, ArrayOfCountsResponse, CountsResponse, ArrayOfKeyValueResponse, KeyValueResponse, Addr, GuardiansListResp, Uint64, ArrayOfVotesResponse, VotesResponse } from "./SocialRecovery.types";
+import { Binary, InstantiateMsg, ExecuteMsg, QueryMsg, ArrayOfCountsResponse, CountsResponse, ArrayOfKeyValueResponse, KeyValueResponse, ArrayOfBinary, Addr, GuardiansListResp, Uint64, ArrayOfVotesResponse, VotesResponse } from "./SocialRecovery.types";
 export interface SocialRecoveryReadOnlyInterface {
   contractAddress: string;
   pubkey: () => Promise<Binary>;
@@ -20,6 +20,19 @@ export interface SocialRecoveryReadOnlyInterface {
     key: string;
   }) => Promise<KeyValueResponse>;
   getAllData: () => Promise<ArrayOfKeyValueResponse>;
+  getSecret: () => Promise<Binary>;
+  getShare: ({
+    address
+  }: {
+    address: string;
+  }) => Promise<Binary>;
+  getAllShares: () => Promise<ArrayOfBinary>;
+  getRecoverData: ({
+    address
+  }: {
+    address: string;
+  }) => Promise<Binary>;
+  getAllRecoverData: () => Promise<ArrayOfBinary>;
 }
 export class SocialRecoveryQueryClient implements SocialRecoveryReadOnlyInterface {
   client: CosmWasmClient;
@@ -34,6 +47,11 @@ export class SocialRecoveryQueryClient implements SocialRecoveryReadOnlyInterfac
     this.counts = this.counts.bind(this);
     this.getData = this.getData.bind(this);
     this.getAllData = this.getAllData.bind(this);
+    this.getSecret = this.getSecret.bind(this);
+    this.getShare = this.getShare.bind(this);
+    this.getAllShares = this.getAllShares.bind(this);
+    this.getRecoverData = this.getRecoverData.bind(this);
+    this.getAllRecoverData = this.getAllRecoverData.bind(this);
   }
   pubkey = async (): Promise<Binary> => {
     return this.client.queryContractSmart(this.contractAddress, {
@@ -76,6 +94,43 @@ export class SocialRecoveryQueryClient implements SocialRecoveryReadOnlyInterfac
       get_all_data: {}
     });
   };
+  getSecret = async (): Promise<Binary> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_secret: {}
+    });
+  };
+  getShare = async ({
+    address
+  }: {
+    address: string;
+  }): Promise<Binary> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_share: {
+        address
+      }
+    });
+  };
+  getAllShares = async (): Promise<ArrayOfBinary> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_all_shares: {}
+    });
+  };
+  getRecoverData = async ({
+    address
+  }: {
+    address: string;
+  }): Promise<Binary> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_recover_data: {
+        address
+      }
+    });
+  };
+  getAllRecoverData = async (): Promise<ArrayOfBinary> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_all_recover_data: {}
+    });
+  };
 }
 export interface SocialRecoveryInterface extends SocialRecoveryReadOnlyInterface {
   contractAddress: string;
@@ -103,6 +158,24 @@ export interface SocialRecoveryInterface extends SocialRecoveryReadOnlyInterface
   }: {
     key: string;
   }, fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
+  storeSecret: ({
+    value
+  }: {
+    value: Binary;
+  }, fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
+  removeSecret: (fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
+  storeShare: ({
+    value
+  }: {
+    value: Binary;
+  }, fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
+  removeShare: (fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
+  storeRecoverData: ({
+    value
+  }: {
+    value: Binary;
+  }, fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
+  removeRecoverData: (fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
 }
 export class SocialRecoveryClient extends SocialRecoveryQueryClient implements SocialRecoveryInterface {
   client: SigningCosmWasmClient;
@@ -118,6 +191,12 @@ export class SocialRecoveryClient extends SocialRecoveryQueryClient implements S
     this.revoke = this.revoke.bind(this);
     this.storeData = this.storeData.bind(this);
     this.removeData = this.removeData.bind(this);
+    this.storeSecret = this.storeSecret.bind(this);
+    this.removeSecret = this.removeSecret.bind(this);
+    this.storeShare = this.storeShare.bind(this);
+    this.removeShare = this.removeShare.bind(this);
+    this.storeRecoverData = this.storeRecoverData.bind(this);
+    this.removeRecoverData = this.removeRecoverData.bind(this);
   }
   updatePubkey = async ({
     newPubkey
@@ -169,6 +248,54 @@ export class SocialRecoveryClient extends SocialRecoveryQueryClient implements S
       remove_data: {
         key
       }
+    }, fee_, memo_, funds_);
+  };
+  storeSecret = async ({
+    value
+  }: {
+    value: Binary;
+  }, fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      store_secret: {
+        value
+      }
+    }, fee_, memo_, funds_);
+  };
+  removeSecret = async (fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_secret: {}
+    }, fee_, memo_, funds_);
+  };
+  storeShare = async ({
+    value
+  }: {
+    value: Binary;
+  }, fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      store_share: {
+        value
+      }
+    }, fee_, memo_, funds_);
+  };
+  removeShare = async (fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_share: {}
+    }, fee_, memo_, funds_);
+  };
+  storeRecoverData = async ({
+    value
+  }: {
+    value: Binary;
+  }, fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      store_recover_data: {
+        value
+      }
+    }, fee_, memo_, funds_);
+  };
+  removeRecoverData = async (fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      remove_recover_data: {}
     }, fee_, memo_, funds_);
   };
 }

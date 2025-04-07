@@ -103,6 +103,92 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "description": "Query the secret",
+      "type": "object",
+      "required": [
+        "get_secret"
+      ],
+      "properties": {
+        "get_secret": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Query a share by address",
+      "type": "object",
+      "required": [
+        "get_share"
+      ],
+      "properties": {
+        "get_share": {
+          "type": "object",
+          "required": [
+            "address"
+          ],
+          "properties": {
+            "address": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Query all shares",
+      "type": "object",
+      "required": [
+        "get_all_shares"
+      ],
+      "properties": {
+        "get_all_shares": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Query the recover data by address",
+      "type": "object",
+      "required": [
+        "get_recover_data"
+      ],
+      "properties": {
+        "get_recover_data": {
+          "type": "object",
+          "required": [
+            "address"
+          ],
+          "properties": {
+            "address": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Query all recover data",
+      "type": "object",
+      "required": [
+        "get_all_recover_data"
+      ],
+      "properties": {
+        "get_all_recover_data": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   ]
 }

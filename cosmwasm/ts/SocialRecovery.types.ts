@@ -29,6 +29,24 @@ export type ExecuteMsg = {
   remove_data: {
     key: string;
   };
+} | {
+  store_secret: {
+    value: Binary;
+  };
+} | {
+  remove_secret: {};
+} | {
+  store_share: {
+    value: Binary;
+  };
+} | {
+  remove_share: {};
+} | {
+  store_recover_data: {
+    value: Binary;
+  };
+} | {
+  remove_recover_data: {};
 };
 export type QueryMsg = {
   pubkey: {};
@@ -46,6 +64,20 @@ export type QueryMsg = {
   };
 } | {
   get_all_data: {};
+} | {
+  get_secret: {};
+} | {
+  get_share: {
+    address: string;
+  };
+} | {
+  get_all_shares: {};
+} | {
+  get_recover_data: {
+    address: string;
+  };
+} | {
+  get_all_recover_data: {};
 };
 export type ArrayOfCountsResponse = CountsResponse[];
 export interface CountsResponse {
@@ -57,6 +89,7 @@ export interface KeyValueResponse {
   key: string;
   value: Binary;
 }
+export type ArrayOfBinary = Binary[];
 export type Addr = string;
 export interface GuardiansListResp {
   guardians: Addr[];
