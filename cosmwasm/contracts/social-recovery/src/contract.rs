@@ -63,6 +63,8 @@ pub fn execute(
         ExecuteMsg::RemoveData { key } => execute::remove_data(deps.storage, &info.sender, &env.contract.address, &key),
         ExecuteMsg::StoreSecret { value } => execute::store_secret(deps.storage, &info.sender, &env.contract.address, &value),
         ExecuteMsg::RemoveSecret {} => execute::remove_secret(deps.storage, &info.sender, &env.contract.address),
+        ExecuteMsg::StoreShare { value } => execute::store_share(deps.storage, &info.sender, &value),
+        ExecuteMsg::RemoveShare {} => execute::remove_share(deps.storage, &info.sender),
     }
 }
 
@@ -77,5 +79,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetData { key } => to_json_binary(&query::get_data(deps.storage, &key)?),
         QueryMsg::GetAllData {} => to_json_binary(&query::get_all_data(deps.storage)?),
         QueryMsg::GetSecret {} => to_json_binary(&query::get_secret(deps.storage)?),
+        QueryMsg::GetShare { address } => to_json_binary(&query::get_share(deps.storage, &address)?),
+        QueryMsg::GetAllShares {} => to_json_binary(&query::get_all_shares(deps.storage)?),
     }
 }

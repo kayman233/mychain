@@ -1,8 +1,8 @@
-use cosmwasm_std::{Binary, StdResult, Storage, Order};
+use cosmwasm_std::{Binary, StdResult, Storage, Order, Addr};
 
 use account_base::state::PUBKEY;
 
-use crate::{state::{GUARDIANS, THRESHOLD, VOTES, COUNTS, KEY_VALUE_STORE, DATA_SECRET}, msg::{GuardiansListResp, VotesResponse, CountsResponse, KeyValueResponse}};
+use crate::{state::{GUARDIANS, THRESHOLD, VOTES, COUNTS, KEY_VALUE_STORE, DATA_SECRET, SHARES}, msg::{GuardiansListResp, VotesResponse, CountsResponse, KeyValueResponse}};
 
 pub fn pubkey(store: &dyn Storage) -> StdResult<Binary> {
     PUBKEY.load(store)
@@ -67,4 +67,15 @@ pub fn get_all_data(store: &dyn Storage) -> StdResult<Vec<KeyValueResponse>> {
 
 pub fn get_secret(store: &dyn Storage) -> StdResult<Binary> {
     DATA_SECRET.load(store)
+}
+
+pub fn get_share(store: &dyn Storage, address: &str) -> StdResult<Binary> {
+    let addr = Addr::unchecked(address);
+    SHARES.load(store, &addr)
+}
+
+pub fn get_all_shares(store: &dyn Storage) -> StdResult<Vec<(Addr, Binary)>> {
+    SHARES
+        .range(store, None, None, Order::Ascending)
+        .collect()
 }

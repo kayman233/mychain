@@ -31,6 +31,8 @@ pub enum ExecuteMsg {
     },
     StoreSecret { value: Binary },
     RemoveSecret {},
+    StoreShare { value: Binary },
+    RemoveShare {},
 }
 
 #[cw_serde]
@@ -81,4 +83,10 @@ pub enum QueryMsg {
     /// Query the secret
     #[returns(Binary)]
     GetSecret {},
+    /// Query a share by address
+    #[returns(Binary)]
+    GetShare { address: String },
+    /// Query all shares
+    #[returns(Vec<Binary>)]
+    GetAllShares {},
 }
