@@ -2,7 +2,7 @@ use cosmwasm_std::{Binary, StdResult, Storage, Order};
 
 use account_base::state::PUBKEY;
 
-use crate::{state::{GUARDIANS, THRESHOLD, VOTES, COUNTS, KEY_VALUE_STORE}, msg::{GuardiansListResp, VotesResponse, CountsResponse, KeyValueResponse}};
+use crate::{state::{GUARDIANS, THRESHOLD, VOTES, COUNTS, KEY_VALUE_STORE, DATA_SECRET}, msg::{GuardiansListResp, VotesResponse, CountsResponse, KeyValueResponse}};
 
 pub fn pubkey(store: &dyn Storage) -> StdResult<Binary> {
     PUBKEY.load(store)
@@ -63,4 +63,8 @@ pub fn get_all_data(store: &dyn Storage) -> StdResult<Vec<KeyValueResponse>> {
             })
         })
         .collect()
+}
+
+pub fn get_secret(store: &dyn Storage) -> StdResult<Binary> {
+    DATA_SECRET.load(store)
 }

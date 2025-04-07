@@ -2,7 +2,7 @@ use cosmwasm_std::{Addr, Binary, Response, Storage, Deps};
 
 use account_base::{state::PUBKEY, execute::sha256};
 
-use crate::{error::{ContractResult, ContractError}, state::{VOTES, GUARDIANS, COUNTS, THRESHOLD, KEY_VALUE_STORE}};
+use crate::{error::{ContractResult, ContractError}, state::{VOTES, GUARDIANS, COUNTS, THRESHOLD, KEY_VALUE_STORE, DATA_SECRET}};
 
 pub fn before_tx(
     deps:      Deps,
@@ -174,4 +174,34 @@ pub fn remove_data(
     Ok(Response::new()
         .add_attribute("method", "remove_data")
         .add_attribute("key", key))
+}
+
+pub fn store_secret(
+    store: &mut dyn Storage,
+    sender: &Addr,
+    contract: &Addr,
+    value: &Binary,
+) -> ContractResult<Response> {
+    // only the account itself can store secrets
+    assert_self(sender, contract)?;
+
+    DATA_SECRET.save(store, value)?;
+
+    Ok(Response::new()
+        .add_attribute("method", "store_secret")
+        .add_attribute("value", value.to_base64()))
+}
+
+pub fn remove_secret(
+    store: &mut dyn Storage,
+    sender: &Addr,
+    contract: &Addr,
+) -> ContractResult<Response> {
+    // only the account itself can remove secrets
+    assert_self(sender, contract)?;
+
+    DATA_SECRET.remove(store);
+
+    Ok(Response::new()
+        .add_attribute("method", "remove_secret"))
 }

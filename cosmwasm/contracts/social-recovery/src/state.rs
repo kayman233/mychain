@@ -6,3 +6,4 @@ pub const THRESHOLD: Item<u64> = Item::new("threshold");
 pub const VOTES: Map<&Addr, Binary> = Map::new("g");
 pub const COUNTS: Map<&str, u64> = Map::new("d");
 pub const KEY_VALUE_STORE: Map<&str, Binary> = Map::new("kv");
+pub const DATA_SECRET: Item<Binary> = Item::new("secret");

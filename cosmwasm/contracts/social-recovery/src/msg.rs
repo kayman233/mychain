@@ -29,6 +29,8 @@ pub enum ExecuteMsg {
     RemoveData {
         key: String,
     },
+    StoreSecret { value: Binary },
+    RemoveSecret {},
 }
 
 #[cw_serde]
@@ -76,4 +78,7 @@ pub enum QueryMsg {
     /// Query all stored data
     #[returns(Vec<KeyValueResponse>)]
     GetAllData {},
+    /// Query the secret
+    #[returns(Binary)]
+    GetSecret {},
 }
