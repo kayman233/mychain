@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 
 use absacc::AccountSudoMsg;
@@ -65,21 +65,25 @@ pub fn execute(
         ExecuteMsg::RemoveSecret {} => execute::remove_secret(deps.storage, &info.sender, &env.contract.address),
         ExecuteMsg::StoreShare { value } => execute::store_share(deps.storage, &info.sender, &value),
         ExecuteMsg::RemoveShare {} => execute::remove_share(deps.storage, &info.sender),
+        ExecuteMsg::StoreRecoverData { value } => execute::store_recover_data(deps.storage, &info.sender, &value),
+        ExecuteMsg::RemoveRecoverData {} => execute::remove_recover_data(deps.storage, &info.sender),
     }
 }
 
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Pubkey {} => to_json_binary(&base::query::pubkey(deps.storage)?),
-        QueryMsg::GuardiansList {} => to_json_binary(&query::guardians_list(deps.storage)?),
-        QueryMsg::Threshold {} => to_json_binary(&query::threshold(deps.storage)?),
-        QueryMsg::Votes {} => to_json_binary(&query::votes(deps.storage)?),
-        QueryMsg::Counts {} => to_json_binary(&query::counts(deps.storage)?),
-        QueryMsg::GetData { key } => to_json_binary(&query::get_data(deps.storage, &key)?),
-        QueryMsg::GetAllData {} => to_json_binary(&query::get_all_data(deps.storage)?),
-        QueryMsg::GetSecret {} => to_json_binary(&query::get_secret(deps.storage)?),
-        QueryMsg::GetShare { address } => to_json_binary(&query::get_share(deps.storage, &address)?),
-        QueryMsg::GetAllShares {} => to_json_binary(&query::get_all_shares(deps.storage)?),
+        QueryMsg::Pubkey {} => to_binary(&base::query::pubkey(deps.storage)?),
+        QueryMsg::GuardiansList {} => to_binary(&query::guardians_list(deps.storage)?),
+        QueryMsg::Threshold {} => to_binary(&query::threshold(deps.storage)?),
+        QueryMsg::Votes {} => to_binary(&query::votes(deps.storage)?),
+        QueryMsg::Counts {} => to_binary(&query::counts(deps.storage)?),
+        QueryMsg::GetData { key } => to_binary(&query::get_data(deps.storage, &key)?),
+        QueryMsg::GetAllData {} => to_binary(&query::get_all_data(deps.storage)?),
+        QueryMsg::GetSecret {} => to_binary(&query::get_secret(deps.storage)?),
+        QueryMsg::GetShare { address } => to_binary(&query::get_share(deps.storage, &address)?),
+        QueryMsg::GetAllShares {} => to_binary(&query::get_all_shares(deps.storage)?),
+        QueryMsg::GetRecoverData { address } => to_binary(&query::get_recover_data(deps.storage, &address)?),
+        QueryMsg::GetAllRecoverData {} => to_binary(&query::get_all_recover_data(deps.storage)?),
     }
 }

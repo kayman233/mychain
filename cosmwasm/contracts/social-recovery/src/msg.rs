@@ -33,6 +33,8 @@ pub enum ExecuteMsg {
     RemoveSecret {},
     StoreShare { value: Binary },
     RemoveShare {},
+    StoreRecoverData { value: Binary },
+    RemoveRecoverData {},
 }
 
 #[cw_serde]
@@ -74,9 +76,7 @@ pub enum QueryMsg {
     Counts {},
     /// Query data by key
     #[returns(KeyValueResponse)]
-    GetData {
-        key: String,
-    },
+    GetData { key: String },
     /// Query all stored data
     #[returns(Vec<KeyValueResponse>)]
     GetAllData {},
@@ -89,4 +89,10 @@ pub enum QueryMsg {
     /// Query all shares
     #[returns(Vec<Binary>)]
     GetAllShares {},
+    /// Query the recover data by address
+    #[returns(Binary)]
+    GetRecoverData { address: String },
+    /// Query all recover data
+    #[returns(Vec<Binary>)]
+    GetAllRecoverData {},
 }

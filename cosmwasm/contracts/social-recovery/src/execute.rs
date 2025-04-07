@@ -2,7 +2,7 @@ use cosmwasm_std::{Addr, Binary, Response, Storage, Deps};
 
 use account_base::{state::PUBKEY, execute::sha256};
 
-use crate::{error::{ContractResult, ContractError}, state::{VOTES, GUARDIANS, COUNTS, THRESHOLD, KEY_VALUE_STORE, DATA_SECRET, SHARES}};
+use crate::{error::{ContractResult, ContractError}, state::{VOTES, GUARDIANS, COUNTS, THRESHOLD, KEY_VALUE_STORE, DATA_SECRET, SHARES, RECOVER_DATA}};
 
 pub fn before_tx(
     deps:      Deps,
@@ -227,5 +227,29 @@ pub fn remove_share(
 
     Ok(Response::new()
         .add_attribute("method", "remove_share")
+        .add_attribute("sender", sender.to_string()))
+}
+
+pub fn store_recover_data(
+    store: &mut dyn Storage,
+    sender: &Addr,
+    value: &Binary,
+) -> ContractResult<Response> {
+    RECOVER_DATA.save(store, sender, value)?;
+
+    Ok(Response::new()
+        .add_attribute("method", "store_recover_data")
+        .add_attribute("sender", sender.to_string())
+        .add_attribute("value", value.to_base64()))
+}
+
+pub fn remove_recover_data(
+    store: &mut dyn Storage,
+    sender: &Addr,
+) -> ContractResult<Response> {
+    RECOVER_DATA.remove(store, sender);
+
+    Ok(Response::new()
+        .add_attribute("method", "remove_recover_data")
         .add_attribute("sender", sender.to_string()))
 }
