@@ -49,7 +49,7 @@ mychaind q tx <insert_txhash>
 ```
 In last attributes of the last event `account_registered`(above raw_log), `key: contract_addr` is the address. To export it (if you follow the file, then the address should be the same as here):
 ```
-export ACCOUNT_ADDR=cosmos1mssg28kaflv6g25phn7ncv25ygtky0najzqvjl0cay8fg95ry3ls5ny649
+export ACCOUNT_ADDR=cosmos133yxxnfvphnyh0dlsa0z2hurqek8pcy955nyd9qddcgnfexxxujq0aegp6
 ```
 
 Also change contract address in `testing/*.json` files
@@ -62,6 +62,9 @@ mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"pubkey":{}}' --output json
 mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"votes":{}}' --output json | jq
 mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"counts":{}}' --output json | jq
 mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"get_all_data":{}}' --output json | jq
+mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"get_all_shares":{}}' --output json | jq
+mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"get_all_recover_data":{}}' --output json | jq
+mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"get_secret":{}}' --output json | jq
 ```
 
 ### To run send tx use sign/main.go, for example:

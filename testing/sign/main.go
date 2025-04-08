@@ -22,8 +22,8 @@ import (
 
 const (
 	chainID        = "mychain"
-	fileIn         = "./4-store-data-unsigned.json"
-	fileOut        = "./4-store-data.json"
+	fileIn         = "./5-store-secret-key-unsigned.json"
+	fileOut        = "./5-store-secret-key.json"
 	grpcURL        = "127.0.0.1:9090"
 	keyName        = "user1"
 	keyringBackend = "test"
