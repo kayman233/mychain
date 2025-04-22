@@ -38,6 +38,7 @@ export const WalletSection = ({
   handleSend,
   handleSendAA,
   handleSetData,
+  handleSetSecret,
 }: {
   isMultiChain: boolean;
   balance?: string;
@@ -48,6 +49,7 @@ export const WalletSection = ({
   handleSend?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
   handleSendAA?: (amount: string | undefined, recipient: string | undefined) => Promise<void>;
   handleSetData?: (key: string, value: string) => Promise<void>;
+  handleSetSecret?: (value: string) => Promise<void>;
 }) => {
   const { connect, openView, status, username, address, message, wallet } = useChain(
     providedChainName || defaultChainName
@@ -128,10 +130,10 @@ export const WalletSection = ({
     <SetDataButton isDisabled={status !== WalletStatus.Connected} handleSetData={handleSetData} />
   );
 
-  const createSecretBtn = handleSetData && (
+  const createSecretBtn = handleSetSecret && (
     <CreateSecretButton
       isDisabled={status !== WalletStatus.Connected}
-      handleSetData={handleSetData}
+      handleSetSecret={handleSetSecret}
     />
   );
 

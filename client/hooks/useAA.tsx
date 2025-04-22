@@ -29,7 +29,7 @@ export function useAA(
   txHash: string,
   setTxHash: (v: string) => void
 ) {
-  const { address, username, getSigningCosmWasmClient } = useChain(defaultChainName);
+  const { address, username, getAccount, getSigningCosmWasmClient } = useChain(defaultChainName);
 
   const [pubkey, setPubkey] = useState<string | null>(null);
   const [threshold, setThreshold] = useState<number | null>(null);
@@ -292,6 +292,62 @@ export function useAA(
     [accountsState.selectedAccount?.contractAddress, address, username, setTxHash]
   );
 
+  function uint8ArrayToBase64(data: Uint8Array) {
+    return btoa(
+      Array.from(data)
+        .map(c => String.fromCharCode(c))
+        .join('')
+    );
+  }
+
+  const handleSetSecret = useCallback(
+    async (value: string) => {
+      if (!accountsState.selectedAccount?.contractAddress || !address || !value) {
+        return;
+      }
+
+      const account = await getAccount();
+      console.log(account);
+
+      const pubkey = uint8ArrayToBase64(account.pubkey);
+
+      console.log(pubkey);
+
+      setIsLoading(true);
+      try {
+        const data = {
+          sender: accountsState.selectedAccount.contractAddress,
+          contract: accountsState.selectedAccount.contractAddress,
+          msg: {
+            store_secret: {
+              value: btoa(value),
+            },
+          },
+          user: username,
+        };
+
+        const headers = {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        };
+
+        console.log(data, headers);
+
+        // const response = await axios.post(`${defaultBackendEndpoint}/execute`, data, headers);
+        await delay(3000);
+        // setTxHash(response.data.txHash);
+        // return response.data.result;
+      } catch (error) {
+        console.error('Error in handleSetSecret:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [accountsState.selectedAccount?.contractAddress, address, username, setTxHash, getAccount]
+  );
+
   const selectAccount = useCallback((account: StoredAccount) => {
     setAccountsState(prev => ({
       ...prev,
@@ -310,6 +366,7 @@ export function useAA(
     handleRevoke,
     handleSetData,
     updateAccountInfo,
+    handleSetSecret,
     isLoading,
   };
 }

@@ -39,6 +39,7 @@ export default function Home() {
     handleRevoke,
     handleSetData,
     updateAccountInfo,
+    handleSetSecret,
     isLoading,
   } = useAA(contractAddress, txHash, setTxHash);
   const { balance, accountBalance, handleSend, handleSendAA } = useBalances(
@@ -87,6 +88,7 @@ export default function Home() {
           handleSend={handleSend}
           handleSendAA={handleSendAA}
           handleSetData={handleSetData}
+          handleSetSecret={handleSetSecret}
         />
       </Flex>
     </Container>
