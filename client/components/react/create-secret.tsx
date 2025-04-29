@@ -23,18 +23,14 @@ import {
 import {
   Bip39,
   EnglishMnemonic,
-  HdPath,
-  pathToString,
-  Random,
   Secp256k1,
-  Secp256k1Keypair,
-  sha256,
   Slip10,
   Slip10Curve,
   stringToPath,
 } from '@cosmjs/crypto';
 import { FaKey, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { Secp256k1HdWallet } from '@cosmjs/amino';
+import * as secp256k1 from '@noble/secp256k1';
 
 interface CreateSecretButtonProps {
   isDisabled: boolean;
@@ -54,6 +50,17 @@ interface GeneratedData {
   shares: Array<Share>;
 }
 
+const uint8ArrayToBase64 = (array: Uint8Array): string => btoa(String.fromCharCode(...array));
+
+const base64ToUint8Array = (base64: string): Uint8Array => {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+};
+
 export const CreateSecretButton = ({ isDisabled, handleSetSecret }: CreateSecretButtonProps) => {
   const [numShares, setNumShares] = useState<number>(3);
   const [threshold, setThreshold] = useState<number>(2);
@@ -61,6 +68,12 @@ export const CreateSecretButton = ({ isDisabled, handleSetSecret }: CreateSecret
   const [generatedData, setGeneratedData] = useState<GeneratedData | null>(null);
   const [expandedShare, setExpandedShare] = useState<number | null>(null);
   const [mnemonic, setMnemonic] = useState<string>('');
+  const [testMessage, setTestMessage] = useState<string>('');
+  const [testResult, setTestResult] = useState<{
+    original: string;
+    encrypted: string;
+    decrypted: string;
+  } | null>(null);
 
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -153,6 +166,126 @@ export const CreateSecretButton = ({ isDisabled, handleSetSecret }: CreateSecret
     }
   };
 
+  const encryptWithSecp256k1 = async (
+    message: string,
+    recipientPubKeyBase64: string
+  ): Promise<{
+    ephemeralPubKey: string;
+    encryptedMsg: string;
+    iv: string;
+  }> => {
+    try {
+      // Генерируем эфемерный приватный ключ
+      const ephemeralPrivKey = secp256k1.utils.randomPrivateKey();
+
+      // Получаем эфемерный публичный ключ
+      const ephemeralPubKey = secp256k1.getPublicKey(ephemeralPrivKey);
+
+      // Декодируем публичный ключ получателя из base64
+      const recipientPubKey = base64ToUint8Array(recipientPubKeyBase64);
+
+      // Получаем общий секрет используя ECDH
+      const sharedSecret = await secp256k1.getSharedSecret(ephemeralPrivKey, recipientPubKey);
+
+      // Создаем ключ для AES из общего секрета (берем первые 32 байта)
+      const aesKey = await window.crypto.subtle.importKey(
+        'raw',
+        sharedSecret.slice(1), // Пропускаем первый байт (0x02 или 0x03)
+        { name: 'AES-GCM' },
+        false,
+        ['encrypt']
+      );
+
+      // Генерируем IV для AES
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+      // Шифруем сообщение
+      const encodedMessage = new TextEncoder().encode(message);
+      const encryptedData = await window.crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        aesKey,
+        encodedMessage
+      );
+
+      return {
+        ephemeralPubKey: uint8ArrayToBase64(ephemeralPubKey),
+        encryptedMsg: uint8ArrayToBase64(new Uint8Array(encryptedData)),
+        iv: uint8ArrayToBase64(iv),
+      };
+    } catch (error) {
+      console.error('Encryption error:', error);
+      throw new Error('Encryption failed');
+    }
+  };
+
+  const decryptWithSecp256k1 = async (
+    encryptedData: {
+      ephemeralPubKey: string;
+      encryptedMsg: string;
+      iv: string;
+    },
+    privateKeyBase64: string
+  ): Promise<string> => {
+    try {
+      // Декодируем приватный ключ из base64
+      const privateKey = base64ToUint8Array(privateKeyBase64);
+
+      // Декодируем эфемерный публичный ключ
+      const ephemeralPubKey = base64ToUint8Array(encryptedData.ephemeralPubKey);
+
+      // Получаем общий секрет
+      const sharedSecret = await secp256k1.getSharedSecret(privateKey, ephemeralPubKey);
+
+      // Создаем ключ для AES из общего секрета
+      const aesKey = await window.crypto.subtle.importKey(
+        'raw',
+        sharedSecret.slice(1), // Пропускаем первый байт
+        { name: 'AES-GCM' },
+        false,
+        ['decrypt']
+      );
+
+      // Декодируем IV и зашифрованное сообщение
+      const iv = base64ToUint8Array(encryptedData.iv);
+      const encryptedMsg = base64ToUint8Array(encryptedData.encryptedMsg);
+
+      // Расшифровываем сообщение
+      const decryptedData = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        aesKey,
+        encryptedMsg
+      );
+
+      return new TextDecoder().decode(decryptedData);
+    } catch (error) {
+      console.error('Decryption error:', error);
+      throw new Error('Decryption failed');
+    }
+  };
+
+  const testAsymmetricEncryption = async (
+    privateKeyBase64: string,
+    publicKeyBase64: string,
+    message: string
+  ) => {
+    try {
+      // Шифруем сообщение используя публичный ключ получателя
+      const encrypted = await encryptWithSecp256k1(message, publicKeyBase64);
+
+      // Расшифровываем сообщение используя приватный ключ
+      const decrypted = await decryptWithSecp256k1(encrypted, privateKeyBase64);
+
+      return {
+        original: message,
+        encrypted: JSON.stringify(encrypted, null, 2),
+        decrypted: decrypted,
+      };
+    } catch (error) {
+      console.error('Test encryption error:', error);
+      throw error;
+    }
+  };
+
   const handleTest = async (mnemonic: string) => {
     try {
       const keys = await generateKeysFromMnemonic(mnemonic);
@@ -163,8 +296,24 @@ export const CreateSecretButton = ({ isDisabled, handleSetSecret }: CreateSecret
       const wallet = await Secp256k1HdWallet.fromMnemonic(mnemonic);
       const accounts = await wallet.getAccounts();
       console.log('accounts:', accounts);
+
+      if (testMessage) {
+        const encryptionTest = await testAsymmetricEncryption(
+          keys.privateKey,
+          keys.publicKeyFull,
+          testMessage
+        );
+        setTestResult(encryptionTest);
+      }
     } catch (error) {
       console.error('Error in handleTest:', error);
+      toast({
+        title: 'Error testing encryption',
+        description: 'Encryption test failed',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -232,26 +381,54 @@ export const CreateSecretButton = ({ isDisabled, handleSetSecret }: CreateSecret
                   onChange={e => setMnemonic(e.target.value)}
                   placeholder="Enter your mnemonic phrase"
                 />
-                <Button
-                  mt={2}
-                  colorScheme="teal"
-                  onClick={async () => {
-                    try {
-                      handleTest(mnemonic);
-                    } catch (error: any) {
-                      toast({
-                        title: 'Error generating keys',
-                        description: error?.message || 'Invalid mnemonic',
-                        status: 'error',
-                        duration: 5000,
-                        isClosable: true,
-                      });
-                    }
-                  }}
-                >
-                  Generate Keys
-                </Button>
               </FormControl>
+              <FormControl>
+                <FormLabel>Test Message</FormLabel>
+                <Input
+                  type="text"
+                  value={testMessage}
+                  onChange={e => setTestMessage(e.target.value)}
+                  placeholder="Enter a message to test encryption"
+                />
+              </FormControl>
+              <Button
+                colorScheme="teal"
+                onClick={() => handleTest(mnemonic)}
+                isDisabled={!mnemonic || !testMessage}
+              >
+                Test Keys & Encryption
+              </Button>
+              {testResult && (
+                <Box p={4} borderWidth={1} borderRadius="md" bg="gray.50">
+                  <Text fontWeight="bold">Encryption Test Results:</Text>
+                  <VStack align="stretch" spacing={2} mt={2}>
+                    <Box>
+                      <Text fontSize="sm" color="gray.500">
+                        Original Message:
+                      </Text>
+                      <Code p={2} display="block" wordBreak="break-all">
+                        {testResult.original}
+                      </Code>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" color="gray.500">
+                        Encrypted (Base64):
+                      </Text>
+                      <Code p={2} display="block" wordBreak="break-all">
+                        {testResult.encrypted}
+                      </Code>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" color="gray.500">
+                        Decrypted:
+                      </Text>
+                      <Code p={2} display="block" wordBreak="break-all">
+                        {testResult.decrypted}
+                      </Code>
+                    </Box>
+                  </VStack>
+                </Box>
+              )}
               {generatedData && (
                 <Box mt={4} p={4} borderWidth={1} borderRadius="md">
                   <Text fontWeight="bold">Generated Key:</Text>
