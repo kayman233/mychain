@@ -16,8 +16,16 @@ type CreateResponse = {
   events: Event[];
 };
 
+function uint8ArrayToBase64(data: Uint8Array) {
+  return btoa(
+    Array.from(data)
+      .map(c => String.fromCharCode(c))
+      .join('')
+  );
+}
+
 export function useCreateAA(setTxHash: (v: string) => void) {
-  const { address, username, getOfflineSigner } = useChain(defaultChainName);
+  const { address, username, getOfflineSigner, getAccount } = useChain(defaultChainName);
 
   const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(
     null
@@ -42,19 +50,25 @@ export function useCreateAA(setTxHash: (v: string) => void) {
 
   const handleCreateAA = useCallback(
     async (params: CreateAccountType) => {
+      console.log('createAA', params);
       const { funds, guardians, threshold } = params;
       if (!funds || !guardians || !threshold || !address || !signingClientCosmos || !username) {
         return;
       }
 
-      const pubKey = await signingClientCosmos.getAccount(address).then(acc => acc?.pubkey);
+      const account = await getAccount();
+      console.log(account);
 
-      if (!pubKey) {
+      const pubkey = uint8ArrayToBase64(account.pubkey);
+
+      console.log(pubkey);
+
+      if (!pubkey) {
         return;
       }
 
       const initMessage: InstantiateMsg = {
-        pubkey: pubKey.value,
+        pubkey,
         guardians,
         threshold,
       };
@@ -74,11 +88,15 @@ export function useCreateAA(setTxHash: (v: string) => void) {
         },
       };
 
+      console.log(data, headers);
+
       const res = await axios.post<CreateResponse>(
         `${defaultBackendEndpoint}/create`,
         data,
         headers
       );
+
+      console.log(res);
 
       if (!res.data.events) {
         return;
@@ -108,6 +126,8 @@ export function useCreateAA(setTxHash: (v: string) => void) {
         createdAt: new Date().toISOString(),
       };
 
+      console.log(storedAccount);
+
       // Используем функцию updateAccounts для обновления localStorage
       updateAccounts(storedAccount);
 
@@ -116,7 +136,7 @@ export function useCreateAA(setTxHash: (v: string) => void) {
 
       return res.data.txHash as any;
     },
-    [address, username, setContractAddress, setTxHash, signingClientCosmos]
+    [address, signingClientCosmos, username, getAccount, setTxHash]
   );
 
   return { contractAddress, handleCreateAA };

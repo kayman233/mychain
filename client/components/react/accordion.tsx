@@ -15,6 +15,7 @@ import {
   ArrayOfCountsResponse,
   ArrayOfVotesResponse,
   ArrayOfKeyValueResponse,
+  ArrayOfBinary,
 } from '../../codegen/SocialRecovery.types';
 
 interface AccordionProps {
@@ -25,12 +26,14 @@ interface AccordionProps {
     counts: ArrayOfCountsResponse | null;
     votes: ArrayOfVotesResponse | null;
     data: ArrayOfKeyValueResponse | null;
+    shares: ArrayOfBinary | null;
+    recoverData: ArrayOfBinary | null;
   };
   isGuardian: boolean;
 }
 
 const InfoAccordion = ({ info, isGuardian }: AccordionProps) => {
-  const { pubkey, threshold, guardians, counts, votes: rawVotes, data } = info;
+  const { counts, votes: rawVotes, data, shares, recoverData } = info;
 
   const processedVotes = counts?.map(count => ({
     pubkey: count.pubkey,
@@ -142,6 +145,37 @@ const InfoAccordion = ({ info, isGuardian }: AccordionProps) => {
                   </Text>
                 </ListItem>
               ))}
+            </OrderedList>
+          )}
+        </AccordionPanel>
+      </AccordionItem>
+      <AccordionItem key="shares">
+        <h2>
+          <AccordionButton justifyContent="center">
+            <Text fontSize="sm" fontWeight="semibold">
+              Shares
+            </Text>
+            <AccordionIcon />
+          </AccordionButton>
+        </h2>
+        <AccordionPanel pb={4}>
+          {!shares || shares?.length === 0 ? (
+            <>No shares</>
+          ) : (
+            <OrderedList>
+              {shares?.map(share => {
+                const [address, data] = share.toString().split(',');
+                return (
+                  <ListItem key={address} marginBottom="1">
+                    <Text fontSize="sm" fontWeight="semibold" width="100%" marginBottom="1">
+                      Address: {address.slice(0, 8)}...{address.slice(-8)}
+                    </Text>
+                    <Text fontSize="sm" width="100%" marginBottom="1" wordBreak="break-all">
+                      Data: {data.slice(0, 8)}...{data.slice(-8)}
+                    </Text>
+                  </ListItem>
+                );
+              })}
             </OrderedList>
           )}
         </AccordionPanel>

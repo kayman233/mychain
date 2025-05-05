@@ -7,6 +7,7 @@ import {
   ArrayOfVotesResponse,
   ArrayOfKeyValueResponse,
   GuardiansListResp,
+  ArrayOfBinary,
 } from '../codegen/SocialRecovery.types';
 import { AccountsState, StoredAccount } from './types';
 import axios from 'axios';
@@ -18,8 +19,11 @@ export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 export const updateAccounts = (newAccount: StoredAccount) => {
   if (typeof window === 'undefined') return;
 
+  console.log('updateAccounts');
+
   const storedAccounts = JSON.parse(localStorage.getItem('accounts') || '[]');
   storedAccounts.push(newAccount);
+  console.log(storedAccounts);
   localStorage.setItem('accounts', JSON.stringify(storedAccounts));
   return storedAccounts;
 };
@@ -38,6 +42,8 @@ export function useAA(
   const [votes, setVotes] = useState<ArrayOfVotesResponse | null>(null);
   const [counts, setCounts] = useState<ArrayOfCountsResponse | null>(null);
   const [data, setData] = useState<ArrayOfKeyValueResponse | null>(null);
+  const [shares, setShares] = useState<ArrayOfBinary | null>(null);
+  const [recoverData, setRecoverData] = useState<ArrayOfBinary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const [accountsState, setAccountsState] = useState<AccountsState>({
@@ -112,6 +118,26 @@ export function useAA(
     }
   }, [address, accountsState.selectedAccount, cleanupClient, getSigningCosmWasmClient]);
 
+  const initClientByContractAddress = useCallback(
+    async (contractAddress: string) => {
+      if (!address || !contractAddress) {
+        return null;
+      }
+
+      const cosmWasmClient = await getSigningCosmWasmClient();
+      if (!cosmWasmClient) return null;
+
+      const socialRecoveryClient = new SocialRecoveryClient(
+        cosmWasmClient,
+        address,
+        contractAddress
+      );
+
+      return socialRecoveryClient;
+    },
+    [address, getSigningCosmWasmClient]
+  );
+
   // Функция для обновления состояния accounts
   const updateAccountsState = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -155,15 +181,25 @@ export function useAA(
       const client = await initClient();
       if (!client || !address) return;
 
-      const [pubkeyRes, thresholdRes, guardiansRes, countsRes, votesRes, dataRes] =
-        await Promise.all([
-          client.pubkey(),
-          client.threshold(),
-          client.guardiansList(),
-          client.counts(),
-          client.votes(),
-          client.getAllData(),
-        ]);
+      const [
+        pubkeyRes,
+        thresholdRes,
+        guardiansRes,
+        countsRes,
+        votesRes,
+        dataRes,
+        sharesRes,
+        recoverDataRes,
+      ] = await Promise.all([
+        client.pubkey(),
+        client.threshold(),
+        client.guardiansList(),
+        client.counts(),
+        client.votes(),
+        client.getAllData(),
+        client.getAllShares(),
+        client.getAllRecoverData(),
+      ]);
 
       setPubkey(pubkeyRes);
       setThreshold(thresholdRes);
@@ -175,6 +211,8 @@ export function useAA(
       setCounts(countsRes);
       setVotes(votesRes);
       setData(dataRes);
+      setShares(sharesRes);
+      setRecoverData(recoverDataRes);
     } catch (error) {
       console.error('Error updating account info:', error);
     } finally {
@@ -333,12 +371,12 @@ export function useAA(
           },
         };
 
-        console.log(data, headers);
+        console.log(data, value, headers);
 
-        // const response = await axios.post(`${defaultBackendEndpoint}/execute`, data, headers);
+        const response = await axios.post(`${defaultBackendEndpoint}/execute`, data, headers);
         await delay(3000);
-        // setTxHash(response.data.txHash);
-        // return response.data.result;
+        setTxHash(response.data.txHash);
+        return response.data.result;
       } catch (error) {
         console.error('Error in handleSetSecret:', error);
       } finally {
@@ -346,6 +384,22 @@ export function useAA(
       }
     },
     [accountsState.selectedAccount?.contractAddress, address, username, setTxHash, getAccount]
+  );
+
+  const handleSetShare = useCallback(
+    async (address: string, value: string) => {
+      const client = await initClientByContractAddress(address);
+      if (!client) return;
+
+      const result = await client.storeShare(
+        { value: btoa(value) },
+        { gas: '1000000', amount: [] }
+      );
+      await delay(3000);
+      setTxHash(result.transactionHash);
+      return result.transactionHash as any;
+    },
+    [initClientByContractAddress, setTxHash]
   );
 
   const selectAccount = useCallback((account: StoredAccount) => {
@@ -356,7 +410,7 @@ export function useAA(
   }, []);
 
   return {
-    accountInfo: { pubkey, threshold, guardians, counts, votes, data },
+    accountInfo: { pubkey, threshold, guardians, counts, votes, data, shares, recoverData },
     isGuardian,
     txHash,
     accounts: accountsState.accounts,
@@ -367,6 +421,7 @@ export function useAA(
     handleSetData,
     updateAccountInfo,
     handleSetSecret,
+    handleSetShare,
     isLoading,
   };
 }

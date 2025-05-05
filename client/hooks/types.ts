@@ -3,6 +3,7 @@ import {
   ArrayOfVotesResponse,
   GuardiansListResp,
   ArrayOfKeyValueResponse,
+  ArrayOfBinary,
 } from '../codegen/SocialRecovery.types';
 
 export interface CreateAccountType {
@@ -18,6 +19,8 @@ export interface AccountInfoType {
   counts: ArrayOfCountsResponse | null;
   votes: ArrayOfVotesResponse | null;
   data: ArrayOfKeyValueResponse | null;
+  shares: ArrayOfBinary | null;
+  recoverData: ArrayOfBinary | null;
 }
 
 export interface StoredAccount {
