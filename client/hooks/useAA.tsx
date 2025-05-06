@@ -402,6 +402,22 @@ export function useAA(
     [initClientByContractAddress, setTxHash]
   );
 
+  const handleSetRecovery = useCallback(
+    async (address: string, value: string) => {
+      const client = await initClientByContractAddress(address);
+      if (!client) return;
+
+      const result = await client.storeRecoverData(
+        { value: btoa(value) },
+        { gas: '1000000', amount: [] }
+      );
+      await delay(3000);
+      setTxHash(result.transactionHash);
+      return result.transactionHash as any;
+    },
+    [initClientByContractAddress, setTxHash]
+  );
+
   const selectAccount = useCallback((account: StoredAccount) => {
     setAccountsState(prev => ({
       ...prev,
@@ -422,6 +438,7 @@ export function useAA(
     updateAccountInfo,
     handleSetSecret,
     handleSetShare,
+    handleSetRecovery,
     isLoading,
   };
 }

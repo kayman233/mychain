@@ -27,7 +27,7 @@ import {
   ArrayOfBinary,
 } from '../../codegen/SocialRecovery.types';
 import { useState } from 'react';
-import { generateKeysFromMnemonic, decryptWithSecp256k1 } from '../../crypto';
+import { generateKeysFromMnemonic, decryptWithSecp256k1, encryptWithSecp256k1 } from '../../crypto';
 
 interface AccordionProps {
   info: {
@@ -41,13 +41,18 @@ interface AccordionProps {
     recoverData: ArrayOfBinary | null;
   };
   isGuardian: boolean;
+  handleSetRecovery: (address: string, value: string) => Promise<void>;
 }
 
-const InfoAccordion = ({ info, isGuardian }: AccordionProps) => {
+const InfoAccordion = ({ info, handleSetRecovery }: AccordionProps) => {
   const { counts, votes: rawVotes, data, shares, recoverData } = info;
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpenRecovery, setIsOpenRecovery] = useState(false);
   const [mnemonic, setMnemonic] = useState<string>('');
+  const [address, setAddress] = useState<string>('');
+  const [newPubkey, setNewPubkey] = useState<string>('');
   const [key, setKey] = useState<string>('');
+  const [share, setShare] = useState<string>('');
   const [decryptedData, setDecryptedData] = useState<string>('');
 
   const toast = useToast();
@@ -61,6 +66,11 @@ const InfoAccordion = ({ info, isGuardian }: AccordionProps) => {
   const openModal = (key: string) => {
     setIsOpen(true);
     setKey(key);
+  };
+
+  const openModalRecovery = (share: string) => {
+    setIsOpenRecovery(true);
+    setShare(share);
   };
 
   const decryptData = async () => {
@@ -83,6 +93,29 @@ const InfoAccordion = ({ info, isGuardian }: AccordionProps) => {
       });
 
       setDecryptedData('');
+    }
+  };
+
+  const handleSetRecoveryData = async () => {
+    try {
+      const keys = await generateKeysFromMnemonic(mnemonic);
+
+      if (!share) {
+        throw new Error('Share not found');
+      }
+
+      const encryptedData = JSON.parse(atob(share));
+      const decryptedShare = await decryptWithSecp256k1(encryptedData, keys.privateKey);
+
+      const newEncryptedData = await encryptWithSecp256k1(decryptedShare, keys.publicKeyFull);
+
+      await handleSetRecovery(address, JSON.stringify(newEncryptedData));
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Error setting recovery data',
+        status: 'error',
+      });
     }
   };
 
@@ -238,6 +271,46 @@ const InfoAccordion = ({ info, isGuardian }: AccordionProps) => {
                       <Text fontSize="sm" width="100%" marginBottom="1" wordBreak="break-all">
                         Data: {data.slice(0, 8)}...{data.slice(-8)}
                       </Text>
+                      <Button
+                        fontSize="sm"
+                        width="100%"
+                        marginBottom="1"
+                        wordBreak="break-all"
+                        onClick={() => openModalRecovery(data)}
+                      >
+                        Set Recovery Data
+                      </Button>
+                    </ListItem>
+                  );
+                })}
+              </OrderedList>
+            )}
+          </AccordionPanel>
+        </AccordionItem>
+        <AccordionItem key="recovery">
+          <h2>
+            <AccordionButton justifyContent="center">
+              <Text fontSize="sm" fontWeight="semibold">
+                Recovery Data
+              </Text>
+              <AccordionIcon />
+            </AccordionButton>
+          </h2>
+          <AccordionPanel pb={4}>
+            {!recoverData || recoverData?.length === 0 ? (
+              <>No recovery data</>
+            ) : (
+              <OrderedList>
+                {recoverData?.map(share => {
+                  const [address, data] = share.toString().split(',');
+                  return (
+                    <ListItem key={address} marginBottom="1">
+                      <Text fontSize="sm" fontWeight="semibold" width="100%" marginBottom="1">
+                        Address: {address.slice(0, 8)}...{address.slice(-8)}
+                      </Text>
+                      <Text fontSize="sm" width="100%" marginBottom="1" wordBreak="break-all">
+                        Data: {data.slice(0, 8)}...{data.slice(-8)}
+                      </Text>
                     </ListItem>
                   );
                 })}
@@ -269,6 +342,39 @@ const InfoAccordion = ({ info, isGuardian }: AccordionProps) => {
                 <Text mt={4}>{decryptedData}</Text>
               </>
             )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={isOpenRecovery} onClose={() => setIsOpenRecovery(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Set Recovery Data</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Input
+              mt={4}
+              type="text"
+              placeholder="Enter mnemonic"
+              value={mnemonic}
+              onChange={e => setMnemonic(e.target.value)}
+            />
+            <Input
+              mt={4}
+              type="text"
+              placeholder="Enter new address"
+              value={address}
+              onChange={e => setAddress(e.target.value)}
+            />
+            <Input
+              mt={4}
+              type="text"
+              placeholder="Enter new pubkey"
+              value={newPubkey}
+              onChange={e => setNewPubkey(e.target.value)}
+            />
+            <Button mt={4} onClick={handleSetRecoveryData}>
+              Set Recovery Data
+            </Button>
           </ModalBody>
         </ModalContent>
       </Modal>

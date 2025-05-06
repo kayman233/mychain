@@ -41,6 +41,7 @@ export default function Home() {
     updateAccountInfo,
     handleSetSecret,
     handleSetShare,
+    handleSetRecovery,
     isLoading,
   } = useAA(contractAddress, txHash, setTxHash);
   const { balance, accountBalance, handleSend, handleSendAA } = useBalances(
@@ -78,6 +79,7 @@ export default function Home() {
           selectAccount={selectAccount}
           handleRecover={handleRecover}
           handleRevoke={handleRevoke}
+          handleSetRecovery={handleSetRecovery}
           updateAccountInfo={updateAccountInfo}
           isLoading={isLoading}
         />

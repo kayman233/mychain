@@ -21,6 +21,7 @@ export const AbstractAccountSection = ({
   selectedAccount,
   selectAccount,
   updateAccountInfo,
+  handleSetRecovery,
   isLoading,
 }: {
   info?: AccountInfoType;
@@ -33,6 +34,7 @@ export const AbstractAccountSection = ({
   selectedAccount: StoredAccount | null;
   selectAccount: (account: StoredAccount) => void;
   updateAccountInfo: () => Promise<void>;
+  handleSetRecovery: (address: string, value: string) => Promise<void>;
   isLoading: boolean;
 }) => {
   const { address: addressUser } = useChain(defaultChainName);
@@ -100,7 +102,11 @@ export const AbstractAccountSection = ({
             {userInfo}
             {userBalance}
             <ConnectedShowAddress address={address} isLoading={false} />
-            <InfoAccordion info={info} isGuardian={isGuardian || false} />
+            <InfoAccordion
+              info={info}
+              handleSetRecovery={handleSetRecovery}
+              isGuardian={isGuardian || false}
+            />
             {recoveryBtn}
           </Stack>
         </GridItem>
