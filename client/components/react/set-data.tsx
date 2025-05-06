@@ -16,6 +16,10 @@ import {
   FormLabel,
 } from '@chakra-ui/react';
 import { FaDatabase } from 'react-icons/fa';
+import { base64ToUint8Array, uint8ArrayToBase64, encryptWithSecp256k1 } from '../../crypto';
+import { Secp256k1 } from '@cosmjs/crypto';
+import { useChain } from '@cosmos-kit/react';
+import { defaultChainName } from '../../config';
 
 interface SetDataButtonProps {
   isDisabled: boolean;
@@ -28,6 +32,8 @@ export const SetDataButton = ({ isDisabled, handleSetData }: SetDataButtonProps)
   const [isLoading, setLoading] = useState<boolean>(false);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const { getAccount } = useChain(defaultChainName);
 
   const onClickSetData = async () => {
     if (!key || !value) {
@@ -44,6 +50,53 @@ export const SetDataButton = ({ isDisabled, handleSetData }: SetDataButtonProps)
     setLoading(true);
     try {
       await handleSetData(key, value);
+      toast({
+        title: 'Data stored successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      setKey('');
+      setValue('');
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: 'Error storing data',
+        description: error?.message || 'Unknown error occurred',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onClickSetDataEncrypted = async () => {
+    if (!key || !value) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in both key and value fields',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const account = await getAccount();
+      console.log(account);
+
+      const pubkey = uint8ArrayToBase64(account.pubkey);
+      const fullPubkey = Secp256k1.uncompressPubkey(base64ToUint8Array(pubkey));
+
+      // Шифруем долю с помощью публичного ключа получателя
+      const encrypted = await encryptWithSecp256k1(btoa(value), uint8ArrayToBase64(fullPubkey));
+
+      console.log(encrypted);
+      await handleSetData(key, JSON.stringify(encrypted));
       toast({
         title: 'Data stored successfully',
         status: 'success',
@@ -113,9 +166,8 @@ export const SetDataButton = ({ isDisabled, handleSetData }: SetDataButtonProps)
             <Button
               colorScheme="red"
               mr={4}
-              isDisabled={true}
               isLoading={isLoading}
-              onClick={onClickSetData}
+              onClick={onClickSetDataEncrypted}
             >
               Store encrypted
             </Button>
