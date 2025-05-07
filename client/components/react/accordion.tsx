@@ -27,7 +27,14 @@ import {
   ArrayOfBinary,
 } from '../../codegen/SocialRecovery.types';
 import { useState } from 'react';
-import { generateKeysFromMnemonic, decryptWithSecp256k1, encryptWithSecp256k1 } from '../../crypto';
+import {
+  generateKeysFromMnemonic,
+  decryptWithSecp256k1,
+  encryptWithSecp256k1,
+  base64ToUint8Array,
+  uint8ArrayToBase64,
+} from '../../crypto';
+import { Secp256k1 } from '@cosmjs/crypto';
 
 interface AccordionProps {
   info: {
@@ -51,7 +58,7 @@ const InfoAccordion = ({ info, handleSetRecovery }: AccordionProps) => {
   const [mnemonic, setMnemonic] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [newPubkey, setNewPubkey] = useState<string>('');
-  const [key, setKey] = useState<string>('');
+  const [item, setItem] = useState<string>('');
   const [share, setShare] = useState<string>('');
   const [decryptedData, setDecryptedData] = useState<string>('');
 
@@ -63,9 +70,9 @@ const InfoAccordion = ({ info, handleSetRecovery }: AccordionProps) => {
     voters: rawVotes?.filter(vote => vote.vote === count.pubkey),
   }));
 
-  const openModal = (key: string) => {
+  const openModal = (item: string) => {
     setIsOpen(true);
-    setKey(key);
+    setItem(item);
   };
 
   const openModalRecovery = (share: string) => {
@@ -76,13 +83,15 @@ const InfoAccordion = ({ info, handleSetRecovery }: AccordionProps) => {
   const decryptData = async () => {
     try {
       const keys = await generateKeysFromMnemonic(mnemonic);
-      const value = data?.find(item => item.key === key)?.value;
 
-      if (!value) {
+      if (!item) {
         throw new Error('Data not found');
       }
 
-      const encryptedData = JSON.parse(atob(value));
+      console.log(item);
+
+      const encryptedData = JSON.parse(atob(item));
+      console.log(encryptedData);
       const decrypted = await decryptWithSecp256k1(encryptedData, keys.privateKey);
       setDecryptedData(atob(decrypted));
     } catch (error) {
@@ -107,7 +116,12 @@ const InfoAccordion = ({ info, handleSetRecovery }: AccordionProps) => {
       const encryptedData = JSON.parse(atob(share));
       const decryptedShare = await decryptWithSecp256k1(encryptedData, keys.privateKey);
 
-      const newEncryptedData = await encryptWithSecp256k1(decryptedShare, keys.publicKeyFull);
+      const fullPubkey = Secp256k1.uncompressPubkey(base64ToUint8Array(newPubkey));
+
+      const newEncryptedData = await encryptWithSecp256k1(
+        decryptedShare,
+        uint8ArrayToBase64(fullPubkey)
+      );
 
       await handleSetRecovery(address, JSON.stringify(newEncryptedData));
     } catch (error) {
@@ -235,7 +249,7 @@ const InfoAccordion = ({ info, handleSetRecovery }: AccordionProps) => {
                           width="100%"
                           marginBottom="1"
                           wordBreak="break-all"
-                          onClick={() => openModal(item.key)}
+                          onClick={() => openModal(item.value)}
                         >
                           Decrypt
                         </Button>
@@ -311,6 +325,15 @@ const InfoAccordion = ({ info, handleSetRecovery }: AccordionProps) => {
                       <Text fontSize="sm" width="100%" marginBottom="1" wordBreak="break-all">
                         Data: {data.slice(0, 8)}...{data.slice(-8)}
                       </Text>
+                      <Button
+                        fontSize="sm"
+                        width="100%"
+                        marginBottom="1"
+                        wordBreak="break-all"
+                        onClick={() => openModal(data)}
+                      >
+                        Decrypt
+                      </Button>
                     </ListItem>
                   );
                 })}
