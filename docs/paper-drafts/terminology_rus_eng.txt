@@ -1,0 +1,167 @@
+СПИСОК АНГЛИЙСКИХ ЭКВИВАЛЕНТОВ СПЕЦИАЛЬНЫХ ТЕРМИНОВ
+(для приложения к статье при подаче в журнал "Автоматика и Телемеханика")
+
+Статья: "Безопасное хранение и восстановление пользовательских данных с помощью мультиагентной схемы в Cosmos"
+
+Авторы: И.В. Кудрявцев, В.В. Горгадзе, А.В. Беленов
+
+---
+
+ОСНОВНЫЕ ТЕРМИНЫ
+
+Русский термин → English Equivalent
+════════════════════════════════════════════════════════════════════
+
+1. Схема Шамира → Shamir's Secret Sharing (SSS)
+
+2. Разделение секрета → Secret Sharing
+
+3. Пороговая схема → Threshold Scheme
+
+4. Доверенные лица / доверенные агенты → Guardians (в контексте blockchain)
+
+5. Абстракция аккаунта → Account Abstraction
+
+6. Социальное восстановление → Social Recovery
+
+7. Мультиагентная система → Multi-agent System
+
+8. Смарт-контракт → Smart Contract
+
+9. Блокчейн-сеть → Blockchain Network
+
+10. Криптографический ключ → Cryptographic Key
+
+11. Приватный ключ → Private Key
+
+12. Публичный ключ → Public Key
+
+13. Зашифрованные данные → Encrypted Data
+
+14. Восстановление данных → Data Recovery
+
+15. Компрометация участников → Participant Compromise
+
+16. Отказоустойчивость → Fault Tolerance
+
+17. Децентрализованная система → Decentralized System
+
+18. Самостоятельная идентичность → Self-Sovereign Identity (SSI)
+
+19. Распределенная система → Distributed System
+
+20. Цифровые активы → Digital Assets
+
+21. Интерполяция Лагранжа → Lagrange Interpolation
+
+22. Части секрета / доли секрета → Secret Shares
+
+23. Пороговое значение → Threshold Value
+
+24. Конфиденциальность → Confidentiality
+
+25. Целостность → Integrity
+
+26. Доступность → Availability
+
+27. Верификация → Verification
+
+28. Голосование (в контексте guardians) → Voting
+
+29. Процедура восстановления → Recovery Procedure
+
+30. Аутентификация → Authentication
+
+
+СПЕЦИФИЧЕСКИЕ ТЕРМИНЫ COSMOS
+
+Русский термин → English Equivalent
+════════════════════════════════════════════════════════════════════
+
+31. Экосистема Cosmos → Cosmos Ecosystem
+
+32. Cosmos SDK → Cosmos SDK (не переводится)
+
+33. CosmWasm → CosmWasm (не переводится)
+
+34. Протокол IBC → Inter-Blockchain Communication (IBC) Protocol
+
+35. Interchain Accounts → Interchain Accounts (не переводится)
+
+36. Затраты газа → Gas Costs
+
+37. Тестовая сеть → Testnet
+
+
+ТЕХНИЧЕСКИЕ ТЕРМИНЫ
+
+Русский термин → English Equivalent
+════════════════════════════════════════════════════════════════════
+
+38. Хранение ключей → Key Management
+
+39. Управление ключами → Key Management
+
+40. Симметричный ключ → Symmetric Key
+
+41. Асимметричная криптография → Asymmetric Cryptography
+
+42. Шифрование → Encryption
+
+43. Расшифрование → Decryption
+
+44. Подпись → Signature
+
+45. Хэш-функция → Hash Function
+
+46. Нулевое разглашение знаний → Zero-Knowledge Proof (ZK-Proof)
+
+47. Децентрализованный идентификатор → Decentralized Identifier (DID)
+
+48. Дерево Меркла → Merkle Tree
+
+49. Биометрическое шифрование → Biometric Encryption
+
+50. Вычислительная сложность → Computational Complexity
+
+
+АББРЕВИАТУРЫ
+
+Русский → English
+════════════════════════════════════════════════════════════════════
+
+SSS → Shamir's Secret Sharing
+DID → Decentralized Identifier
+IBC → Inter-Blockchain Communication
+EIP → Ethereum Improvement Proposal
+ZK → Zero-Knowledge
+SSI → Self-Sovereign Identity
+OAuth → Open Authorization (не переводится)
+HSM → Hardware Security Module
+
+
+ПРИМЕЧАНИЯ
+
+1. Термины "guardian" и "доверенные лица/агенты" в контексте blockchain
+   традиционно переводятся как "guardians" без перевода, так как это
+   устоявшийся термин в области social recovery.
+
+2. CosmWasm, Cosmos SDK, Interchain Accounts - это собственные имена
+   технологий и не переводятся.
+
+3. В контексте данной работы под "восстановлением" (recovery) понимается
+   именно восстановление зашифрованных данных (data recovery), а не
+   восстановление доступа к аккаунту (account recovery).
+
+4. "Пороговая схема" (threshold scheme) - это схема, в которой для
+   восстановления секрета требуется минимальное пороговое количество
+   участников (k из n).
+
+5. "Абстракция аккаунта" (account abstraction) - это концепция,
+   позволяющая реализовать логику аутентификации и авторизации
+   через программируемые смарт-контракты.
+
+---
+
+Дата составления: 12 октября 2025
+
