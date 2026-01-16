@@ -1,0 +1,185 @@
+{\actuality} В эпоху цифровой трансформации стремительное развитие технологий блокчейн
+открывает новые горизонты для бизнеса и государственных учреждений. Современные
+организации все чаще стремятся интегрировать распределенные реестры для повышения
+прозрачности, безопасности и эффективности своих операций. Однако текущие решения
+зачастую требуют значительных ресурсов на внедрение и сопровождение. Актуальность
+настоящего исследования обусловлена необходимостью упрощения процесса создания и
+управления блокчейн-сетями. Объединение возможностей Hyperledger Fabric и сети
+Cosmos может предложить более гибкое и экономически эффективное решение. Это
+особенно важно для организаций, стремящихся оптимизировать бизнес-процессы без
+значительных затрат.
+
+{\aim} данной работы является детальное изучение и разработка механизма, который
+позволяет создавать блокчейн-сети на базе уже существующих валидаторов, аналогично
+архитектуре, реализованной в Hyperledger Fabric, с последующей адаптацией для
+экосистемы Cosmos/Tendermint.
+
+Для достижения поставленной цели необходимо решить следующие {\tasks}:
+\begin{enumerate}[beginpenalty=10000]
+  \item Проанализировать эволюцию блокчейн-технологий и ключевые принципы их работы.
+  \item Исследовать архитектуру и возможности платформы Cosmos и протокола Tendermint.
+  \item Сравнить инфраструктуру Hyperledger Fabric, Ethereum и Polkadot с точки зрения
+  построения частных и консорциумных сетей.
+  \item Сформировать требования к автоматизированной инфраструктуре валидаторов и
+  предложить схему их подбора на основе производительности.
+  \item Разработать архитектуру восстановления смарт-аккаунтов с применением
+  пороговой криптографии и социальной модели доверия.
+  \item Интегрировать прототип и провести оценку масштабируемости и надежности.
+  \item Сформулировать выводы и рекомендации для развертывания и развития решения.
+\end{enumerate}
+
+{\novelty}
+\begin{enumerate}[beginpenalty=10000]
+  \item Предложена архитектура автоматизированного формирования сети валидаторов
+  в экосистеме Cosmos/Tendermint, ориентированная на повторное использование
+  существующей инфраструктуры.
+  \item Разработан подход к оценке валидаторов на основе производительности и
+  надежности для динамического обновления состава сети.
+  \item Сформулирована модель восстановления смарт-аккаунтов, совместимая с
+  требованиями приватных блокчейнов и механизмами Tendermint.
+\end{enumerate}
+
+{\influence} Практическая значимость работы заключается в возможности упрощенного
+развертывания частных и консорциумных сетей Cosmos с сокращением затрат на
+сопровождение и повышением управляемости валидаторской инфраструктуры.
+
+{\methods} В работе используются методы системного анализа, архитектурного
+проектирования, сравнительного анализа платформ, моделирования и экспериментальной
+оценки прототипа.
+
+{\defpositions}
+\begin{enumerate}[beginpenalty=10000]
+  \item Архитектура автоматизированной сети валидаторов позволяет строить новые
+  блокчейн-сети на базе существующих валидаторов без потери устойчивости.
+  \item Схема отбора валидаторов на основе метрик производительности повышает
+  надежность и масштабируемость сети.
+  \item Механизм восстановления смарт-аккаунтов на основе пороговой криптографии
+  обеспечивает баланс между доступностью и безопасностью.
+\end{enumerate}
+
+{\reliability} полученных результатов обеспечивается использованием формализованных
+метрик, экспериментальной проверкой на прототипе и сопоставлением с результатами,
+полученными в смежных исследованиях.
+
+{\probation}
+Основные результаты работы докладывались на профильных семинарах и конференциях
+(будет уточнено по мере подготовки рукописи).
+
+{\contribution} Автор выполнил анализ платформ, сформулировал архитектуру решения,
+разработал модель оценки валидаторов и подготовил прототип для экспериментальной проверки.
+
+\ifnumequal{\value{bibliosel}}{0}
+{%%% Встроенная реализация с загрузкой файла через движок bibtex8. (При желании, внутри можно использовать обычные ссылки, наподобие `\cite{vakbib1,vakbib2}`).
+    {\publications} Основные результаты по теме диссертации изложены
+    в~XX~печатных изданиях,
+    X из которых изданы в журналах, рекомендованных ВАК,
+    X "--- в тезисах докладов.
+}%
+{%%% Реализация пакетом biblatex через движок biber
+    \begin{refsection}[bl-author, bl-registered]
+        % Это refsection=1.
+        % Процитированные здесь работы:
+        %  * подсчитываются, для автоматического составления фразы "Основные результаты ..."
+        %  * попадают в авторскую библиографию, при usefootcite==0 и стиле `\insertbiblioauthor` или `\insertbiblioauthorgrouped`
+        %  * нумеруются там в зависимости от порядка команд `\printbibliography` в этом разделе.
+        %  * при использовании `\insertbiblioauthorgrouped`, порядок команд `\printbibliography` в нём должен быть тем же (см. biblio/biblatex.tex)
+        %
+        % Невидимый библиографический список для подсчёта количества публикаций:
+        \phantom{\printbibliography[heading=nobibheading, section=1, env=countauthorvak,          keyword=biblioauthorvak]%
+        \printbibliography[heading=nobibheading, section=1, env=countauthorwos,          keyword=biblioauthorwos]%
+        \printbibliography[heading=nobibheading, section=1, env=countauthorscopus,       keyword=biblioauthorscopus]%
+        \printbibliography[heading=nobibheading, section=1, env=countauthorconf,         keyword=biblioauthorconf]%
+        \printbibliography[heading=nobibheading, section=1, env=countauthorother,        keyword=biblioauthorother]%
+        \printbibliography[heading=nobibheading, section=1, env=countregistered,         keyword=biblioregistered]%
+        \printbibliography[heading=nobibheading, section=1, env=countauthorpatent,       keyword=biblioauthorpatent]%
+        \printbibliography[heading=nobibheading, section=1, env=countauthorprogram,      keyword=biblioauthorprogram]%
+        \printbibliography[heading=nobibheading, section=1, env=countauthor,             keyword=biblioauthor]%
+        \printbibliography[heading=nobibheading, section=1, env=countauthorvakscopuswos, filter=vakscopuswos]%
+        \printbibliography[heading=nobibheading, section=1, env=countauthorscopuswos,    filter=scopuswos]}%
+        %
+        \nocite{*}%
+        %
+        {\publications} Основные результаты по теме диссертации изложены в~\arabic{citeauthor}~печатных изданиях,
+        \arabic{citeauthorvak} из которых изданы в журналах, рекомендованных ВАК%
+        \ifnum \value{citeauthorscopuswos}>0%
+            , \arabic{citeauthorscopuswos} "--- в~периодических научных журналах, индексируемых Web of~Science и Scopus%
+        \fi%
+        \ifnum \value{citeauthorconf}>0%
+            , \arabic{citeauthorconf} "--- в~тезисах докладов.
+        \else%
+            .
+        \fi%
+        \ifnum \value{citeregistered}=1%
+            \ifnum \value{citeauthorpatent}=1%
+                Зарегистрирован \arabic{citeauthorpatent} патент.
+            \fi%
+            \ifnum \value{citeauthorprogram}=1%
+                Зарегистрирована \arabic{citeauthorprogram} программа для ЭВМ.
+            \fi%
+        \fi%
+        \ifnum \value{citeregistered}>1%
+            Зарегистрированы\ %
+            \ifnum \value{citeauthorpatent}>0%
+            \formbytotal{citeauthorpatent}{патент}{}{а}{}%
+            \ifnum \value{citeauthorprogram}=0 . \else \ и~\fi%
+            \fi%
+            \ifnum \value{citeauthorprogram}>0%
+            \formbytotal{citeauthorprogram}{программ}{а}{ы}{} для ЭВМ.
+            \fi%
+        \fi%
+        % К публикациям, в которых излагаются основные научные результаты диссертации на соискание учёной
+        % степени, в рецензируемых изданиях приравниваются патенты на изобретения, патенты (свидетельства) на
+        % полезную модель, патенты на промышленный образец, патенты на селекционные достижения, свидетельства
+        % на программу для электронных вычислительных машин, базу данных, топологию интегральных микросхем,
+        % зарегистрированные в установленном порядке.(в ред. Постановления Правительства РФ от 21.04.2016 N 335)
+    \end{refsection}%
+    \begin{refsection}[bl-author, bl-registered]
+        % Это refsection=2.
+        % Процитированные здесь работы:
+        %  * попадают в авторскую библиографию, при usefootcite==0 и стиле `\insertbiblioauthorimportant`.
+        %  * ни на что не влияют в противном случае
+        \nocite{vakbib2}%vak
+        \nocite{patbib1}%patent
+        \nocite{progbib1}%program
+        \nocite{bib1}%other
+        \nocite{confbib1}%conf
+    \end{refsection}%
+        %
+        % Всё, что вне этих двух refsection, это refsection=0,
+        %  * для диссертации - это нормальные ссылки, попадающие в обычную библиографию
+        %  * для автореферата:
+        %     * при usefootcite==0, ссылка корректно сработает только для источника из `external.bib`. Для своих работ --- напечатает "[0]" (и даже Warning не вылезет).
+        %     * при usefootcite==1, ссылка сработает нормально. В авторской библиографии будут только процитированные в refsection=0 работы.
+}
+
+При использовании пакета \verb!biblatex! будут подсчитаны все работы, добавленные
+в файл \verb!biblio/author.bib!. Для правильного подсчёта работ в~различных
+системах цитирования требуется использовать поля:
+\begin{itemize}
+        \item \texttt{authorvak} если публикация индексирована ВАК,
+        \item \texttt{authorscopus} если публикация индексирована Scopus,
+        \item \texttt{authorwos} если публикация индексирована Web of Science,
+        \item \texttt{authorconf} для докладов конференций,
+        \item \texttt{authorpatent} для патентов,
+        \item \texttt{authorprogram} для зарегистрированных программ для ЭВМ,
+        \item \texttt{authorother} для других публикаций.
+\end{itemize}
+Для подсчёта используются счётчики:
+\begin{itemize}
+        \item \texttt{citeauthorvak} для работ, индексируемых ВАК,
+        \item \texttt{citeauthorscopus} для работ, индексируемых Scopus,
+        \item \texttt{citeauthorwos} для работ, индексируемых Web of Science,
+        \item \texttt{citeauthorvakscopuswos} для работ, индексируемых одной из трёх баз,
+        \item \texttt{citeauthorscopuswos} для работ, индексируемых Scopus или Web of~Science,
+        \item \texttt{citeauthorconf} для докладов на конференциях,
+        \item \texttt{citeauthorother} для остальных работ,
+        \item \texttt{citeauthorpatent} для патентов,
+        \item \texttt{citeauthorprogram} для зарегистрированных программ для ЭВМ,
+        \item \texttt{citeauthor} для суммарного количества работ.
+\end{itemize}
+% Счётчик \texttt{citeexternal} используется для подсчёта процитированных публикаций;
+% \texttt{citeregistered} "--- для подсчёта суммарного количества патентов и программ для ЭВМ.
+
+Для добавления в список публикаций автора работ, которые не были процитированы в
+автореферате, требуется их~перечислить с использованием команды \verb!\nocite! в
+\verb!Synopsis/content.tex!.
