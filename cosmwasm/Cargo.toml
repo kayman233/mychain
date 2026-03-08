@@ -16,6 +16,10 @@ cw-storage-plus  = "1"
 cw-utils         = "1"
 hex              = "0.4"
 prost            = "0.11"
+rsa              = { version = "0.9", default-features = false, features = ["sha2"] }
+base64           = { version = "0.22", default-features = false, features = ["alloc"] }
+serde-json-wasm  = "1.0"
+serde            = { version = "1.0", default-features = false, features = ["derive"] }
 sha2             = "0.10"
 thiserror        = "1"
 tiny-keccak      = { version = "2", features = ["keccak"] }

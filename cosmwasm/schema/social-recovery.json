@@ -18,6 +18,25 @@
           "type": "string"
         }
       },
+      "oauth_config": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/OAuthConfig"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "oauth_guardians": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "$ref": "#/definitions/OAuthGuardian"
+        }
+      },
       "pubkey": {
         "$ref": "#/definitions/Binary"
       },
@@ -32,6 +51,54 @@
       "Binary": {
         "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
         "type": "string"
+      },
+      "OAuthConfig": {
+        "type": "object",
+        "required": [
+          "expected_audience",
+          "google_issuer",
+          "max_clock_skew"
+        ],
+        "properties": {
+          "attestor_pubkey": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Binary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expected_audience": {
+            "type": "string"
+          },
+          "google_issuer": {
+            "type": "string"
+          },
+          "max_clock_skew": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          }
+        },
+        "additionalProperties": false
+      },
+      "OAuthGuardian": {
+        "type": "object",
+        "required": [
+          "provider",
+          "sub_hash"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string"
+          },
+          "sub_hash": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       }
     }
   },
@@ -40,7 +107,6 @@
     "title": "ExecuteMsg",
     "oneOf": [
       {
-        "description": "Change the pubkey associated with this account.\n\nOnly callable by the account itself.",
         "type": "object",
         "required": [
           "update_pubkey"
@@ -96,7 +162,6 @@
         "additionalProperties": false
       },
       {
-        "description": "Store data by key",
         "type": "object",
         "required": [
           "store_data"
@@ -122,7 +187,6 @@
         "additionalProperties": false
       },
       {
-        "description": "Remove data by key",
         "type": "object",
         "required": [
           "remove_data"
@@ -244,12 +308,161 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "recover_with_o_auth"
+        ],
+        "properties": {
+          "recover_with_o_auth": {
+            "type": "object",
+            "required": [
+              "attestation",
+              "new_pubkey"
+            ],
+            "properties": {
+              "attestation": {
+                "$ref": "#/definitions/OAuthAttestationProof"
+              },
+              "new_pubkey": {
+                "$ref": "#/definitions/Binary"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "revoke_o_auth"
+        ],
+        "properties": {
+          "revoke_o_auth": {
+            "type": "object",
+            "required": [
+              "attestation"
+            ],
+            "properties": {
+              "attestation": {
+                "$ref": "#/definitions/OAuthAttestationProof"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "store_o_auth_share"
+        ],
+        "properties": {
+          "store_o_auth_share": {
+            "type": "object",
+            "required": [
+              "attestation",
+              "value"
+            ],
+            "properties": {
+              "attestation": {
+                "$ref": "#/definitions/OAuthAttestationProof"
+              },
+              "value": {
+                "$ref": "#/definitions/Binary"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ],
     "definitions": {
       "Binary": {
         "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
         "type": "string"
+      },
+      "OAuthAttestation": {
+        "type": "object",
+        "required": [
+          "action",
+          "chain_id",
+          "contract",
+          "expires_at",
+          "nonce",
+          "provider",
+          "sub_hash"
+        ],
+        "properties": {
+          "action": {
+            "$ref": "#/definitions/OAuthAttestationAction"
+          },
+          "chain_id": {
+            "type": "string"
+          },
+          "contract": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          },
+          "new_pubkey": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Binary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "share_hash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sub_hash": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OAuthAttestationAction": {
+        "type": "string",
+        "enum": [
+          "recover",
+          "revoke",
+          "store_share"
+        ]
+      },
+      "OAuthAttestationProof": {
+        "type": "object",
+        "required": [
+          "attestation",
+          "signature"
+        ],
+        "properties": {
+          "attestation": {
+            "$ref": "#/definitions/OAuthAttestation"
+          },
+          "signature": {
+            "$ref": "#/definitions/Binary"
+          }
+        },
+        "additionalProperties": false
       }
     }
   },
@@ -258,7 +471,6 @@
     "title": "QueryMsg",
     "oneOf": [
       {
-        "description": "Query the pubkey associated with this account.",
         "type": "object",
         "required": [
           "pubkey"
@@ -324,7 +536,6 @@
         "additionalProperties": false
       },
       {
-        "description": "Query data by key",
         "type": "object",
         "required": [
           "get_data"
@@ -346,7 +557,6 @@
         "additionalProperties": false
       },
       {
-        "description": "Query all stored data",
         "type": "object",
         "required": [
           "get_all_data"
@@ -360,7 +570,6 @@
         "additionalProperties": false
       },
       {
-        "description": "Query the secret",
         "type": "object",
         "required": [
           "get_secret"
@@ -374,7 +583,6 @@
         "additionalProperties": false
       },
       {
-        "description": "Query a share by address",
         "type": "object",
         "required": [
           "get_share"
@@ -396,7 +604,6 @@
         "additionalProperties": false
       },
       {
-        "description": "Query all shares",
         "type": "object",
         "required": [
           "get_all_shares"
@@ -410,7 +617,6 @@
         "additionalProperties": false
       },
       {
-        "description": "Query the recover data by address",
         "type": "object",
         "required": [
           "get_recover_data"
@@ -432,7 +638,6 @@
         "additionalProperties": false
       },
       {
-        "description": "Query all recover data",
         "type": "object",
         "required": [
           "get_all_recover_data"
@@ -440,6 +645,66 @@
         "properties": {
           "get_all_recover_data": {
             "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "o_auth_guardians_list"
+        ],
+        "properties": {
+          "o_auth_guardians_list": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "o_auth_votes"
+        ],
+        "properties": {
+          "o_auth_votes": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "o_auth_config_query"
+        ],
+        "properties": {
+          "o_auth_config_query": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "get_o_auth_share"
+        ],
+        "properties": {
+          "get_o_auth_share": {
+            "type": "object",
+            "required": [
+              "sub_hash"
+            ],
+            "properties": {
+              "sub_hash": {
+                "type": "string"
+              }
+            },
             "additionalProperties": false
           }
         },
@@ -560,6 +825,12 @@
         }
       }
     },
+    "get_o_auth_share": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Binary",
+      "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+      "type": "string"
+    },
     "get_recover_data": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Binary",
@@ -598,6 +869,98 @@
         "Addr": {
           "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
           "type": "string"
+        }
+      }
+    },
+    "o_auth_config_query": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OAuthConfig",
+      "type": "object",
+      "required": [
+        "expected_audience",
+        "google_issuer",
+        "max_clock_skew"
+      ],
+      "properties": {
+        "attestor_pubkey": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Binary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_audience": {
+          "type": "string"
+        },
+        "google_issuer": {
+          "type": "string"
+        },
+        "max_clock_skew": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Binary": {
+          "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+          "type": "string"
+        }
+      }
+    },
+    "o_auth_guardians_list": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Array_of_OAuthGuardian",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/OAuthGuardian"
+      },
+      "definitions": {
+        "OAuthGuardian": {
+          "type": "object",
+          "required": [
+            "provider",
+            "sub_hash"
+          ],
+          "properties": {
+            "provider": {
+              "type": "string"
+            },
+            "sub_hash": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "o_auth_votes": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Array_of_OAuthVotesResponse",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/OAuthVotesResponse"
+      },
+      "definitions": {
+        "OAuthVotesResponse": {
+          "type": "object",
+          "required": [
+            "sub_hash",
+            "vote"
+          ],
+          "properties": {
+            "sub_hash": {
+              "type": "string"
+            },
+            "vote": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
         }
       }
     },

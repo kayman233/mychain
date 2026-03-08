@@ -23,3 +23,5 @@ cw-storage-plus  = { workspace = true }
 cw-utils         = { workspace = true }
 cw2              = { workspace = true }
 thiserror        = { workspace = true }
+serde            = { workspace = true }
+hex              = { workspace = true }

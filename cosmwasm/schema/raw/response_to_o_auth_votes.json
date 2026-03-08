@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Array_of_OAuthVotesResponse",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/OAuthVotesResponse"
+  },
+  "definitions": {
+    "OAuthVotesResponse": {
+      "type": "object",
+      "required": [
+        "sub_hash",
+        "vote"
+      ],
+      "properties": {
+        "sub_hash": {
+          "type": "string"
+        },
+        "vote": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

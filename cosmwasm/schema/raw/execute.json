@@ -3,7 +3,6 @@
   "title": "ExecuteMsg",
   "oneOf": [
     {
-      "description": "Change the pubkey associated with this account.\n\nOnly callable by the account itself.",
       "type": "object",
       "required": [
         "update_pubkey"
@@ -59,7 +58,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Store data by key",
       "type": "object",
       "required": [
         "store_data"
@@ -85,7 +83,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Remove data by key",
       "type": "object",
       "required": [
         "remove_data"
@@ -207,12 +204,161 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "recover_with_o_auth"
+      ],
+      "properties": {
+        "recover_with_o_auth": {
+          "type": "object",
+          "required": [
+            "attestation",
+            "new_pubkey"
+          ],
+          "properties": {
+            "attestation": {
+              "$ref": "#/definitions/OAuthAttestationProof"
+            },
+            "new_pubkey": {
+              "$ref": "#/definitions/Binary"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "revoke_o_auth"
+      ],
+      "properties": {
+        "revoke_o_auth": {
+          "type": "object",
+          "required": [
+            "attestation"
+          ],
+          "properties": {
+            "attestation": {
+              "$ref": "#/definitions/OAuthAttestationProof"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "store_o_auth_share"
+      ],
+      "properties": {
+        "store_o_auth_share": {
+          "type": "object",
+          "required": [
+            "attestation",
+            "value"
+          ],
+          "properties": {
+            "attestation": {
+              "$ref": "#/definitions/OAuthAttestationProof"
+            },
+            "value": {
+              "$ref": "#/definitions/Binary"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {
     "Binary": {
       "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
       "type": "string"
+    },
+    "OAuthAttestation": {
+      "type": "object",
+      "required": [
+        "action",
+        "chain_id",
+        "contract",
+        "expires_at",
+        "nonce",
+        "provider",
+        "sub_hash"
+      ],
+      "properties": {
+        "action": {
+          "$ref": "#/definitions/OAuthAttestationAction"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "contract": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "new_pubkey": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Binary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "share_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sub_hash": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OAuthAttestationAction": {
+      "type": "string",
+      "enum": [
+        "recover",
+        "revoke",
+        "store_share"
+      ]
+    },
+    "OAuthAttestationProof": {
+      "type": "object",
+      "required": [
+        "attestation",
+        "signature"
+      ],
+      "properties": {
+        "attestation": {
+          "$ref": "#/definitions/OAuthAttestation"
+        },
+        "signature": {
+          "$ref": "#/definitions/Binary"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

@@ -7,6 +7,8 @@
 export type Binary = string;
 export interface InstantiateMsg {
   guardians: string[];
+  oauth_config?: OAuthConfig | null;
+  oauth_guardians?: OAuthGuardian[] | null;
   pubkey: Binary;
   threshold: number;
 }
@@ -47,7 +49,53 @@ export type ExecuteMsg = {
   };
 } | {
   remove_recover_data: {};
+} | {
+  recover_with_o_auth: {
+    attestation: OAuthAttestationProof;
+    new_pubkey: Binary;
+  };
+} | {
+  revoke_o_auth: {
+    attestation: OAuthAttestationProof;
+  };
+} | {
+  store_o_auth_share: {
+    attestation: OAuthAttestationProof;
+    value: Binary;
+  };
 };
+export interface OAuthGuardian {
+  provider: string;
+  sub_hash: string;
+}
+export interface OAuthConfig {
+  attestor_pubkey?: Binary | null;
+  google_issuer: string;
+  expected_audience: string;
+  max_clock_skew: number;
+}
+export type OAuthAttestationAction = "recover" | "revoke" | "store_share";
+export interface OAuthAttestation {
+  action: OAuthAttestationAction;
+  chain_id: string;
+  contract: string;
+  expires_at: number;
+  new_pubkey?: Binary | null;
+  nonce: string;
+  provider: string;
+  share_hash?: string | null;
+  sub_hash: string;
+}
+export interface OAuthAttestationProof {
+  attestation: OAuthAttestation;
+  signature: Binary;
+}
+export interface OAuthVotesResponse {
+  sub_hash: string;
+  vote: string;
+}
+export type ArrayOfOAuthVotesResponse = OAuthVotesResponse[];
+export type ArrayOfOAuthGuardian = OAuthGuardian[];
 export type QueryMsg = {
   pubkey: {};
 } | {
@@ -78,6 +126,16 @@ export type QueryMsg = {
   };
 } | {
   get_all_recover_data: {};
+} | {
+  o_auth_guardians_list: {};
+} | {
+  o_auth_votes: {};
+} | {
+  o_auth_config_query: {};
+} | {
+  get_o_auth_share: {
+    sub_hash: string;
+  };
 };
 export type ArrayOfCountsResponse = CountsResponse[];
 export interface CountsResponse {

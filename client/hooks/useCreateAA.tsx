@@ -1,19 +1,26 @@
 import { useChain } from '@cosmos-kit/react';
-import { defaultBackendEndpoint, defaultChainName, defaultRpc } from '../config';
-import { SigningStargateClient } from '@cosmjs/stargate';
-import { useCallback, useEffect, useState } from 'react';
+import { defaultBackendEndpoint, defaultChainName } from '../config';
+import { useCallback, useState } from 'react';
 import axios from 'axios';
 
-import { getSigningAbstractaccountClient } from '../codegen/codegen';
 import { InstantiateMsg } from '../codegen/SocialRecovery.types';
-import { Event } from '../codegen/codegen/tendermint/abci/types';
 import { CreateAccountType, StoredAccount } from './types';
 import { updateAccounts } from './useAA';
+
+type TxEventAttribute = {
+  key: Uint8Array | string;
+  value: Uint8Array | string;
+};
+
+type TxEvent = {
+  type: string;
+  attributes: TxEventAttribute[];
+};
 
 type CreateResponse = {
   result: string;
   txHash: string;
-  events: Event[];
+  events: TxEvent[];
 };
 
 function uint8ArrayToBase64(data: Uint8Array) {
@@ -25,34 +32,14 @@ function uint8ArrayToBase64(data: Uint8Array) {
 }
 
 export function useCreateAA(setTxHash: (v: string) => void) {
-  const { address, username, getOfflineSigner, getAccount } = useChain(defaultChainName);
-
-  const [signingClientCosmos, setSigningClientCosmos] = useState<SigningStargateClient | null>(
-    null
-  );
+  const { address, username, getAccount } = useChain(defaultChainName);
   const [contractAddress, setContractAddress] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!address || signingClientCosmos) {
-      return;
-    }
-
-    getSigningAbstractaccountClient({
-      rpcEndpoint: defaultRpc,
-      signer: getOfflineSigner(),
-    }).then(client => {
-      if (!client) {
-        return;
-      }
-      setSigningClientCosmos(client);
-    });
-  }, [address, getOfflineSigner, signingClientCosmos]);
 
   const handleCreateAA = useCallback(
     async (params: CreateAccountType) => {
       console.log('createAA', params);
       const { funds, guardians, threshold } = params;
-      if (!funds || !guardians || !threshold || !address || !signingClientCosmos || !username) {
+      if (!funds || !guardians || !threshold || !address || !username) {
         return;
       }
 
@@ -136,7 +123,7 @@ export function useCreateAA(setTxHash: (v: string) => void) {
 
       return res.data.txHash as any;
     },
-    [address, signingClientCosmos, username, getAccount, setTxHash]
+    [address, username, getAccount, setTxHash]
   );
 
   return { contractAddress, handleCreateAA };

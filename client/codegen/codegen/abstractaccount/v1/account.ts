@@ -21,6 +21,19 @@ export interface AbstractAccountSDKType {
   account_number: bigint;
   sequence: bigint;
 }
+export interface AbstractAccountProtoMsg {
+  typeUrl: "/abstractaccount.v1.AbstractAccount";
+  value: Uint8Array;
+}
+export interface AbstractAccountAmino {
+  address: string;
+  account_number: string;
+  sequence: string;
+}
+export interface AbstractAccountAminoMsg {
+  type: "/abstractaccount.v1.AbstractAccount";
+  value: AbstractAccountAmino;
+}
 /**
  * NilPubKey is the pubkey type of the AbstractAccount. Basically, it represents
  * a pubkey that doesn't exist.
@@ -42,6 +55,17 @@ export interface NilPubKey {
  */
 export interface NilPubKeySDKType {
   address_bytes: Uint8Array;
+}
+export interface NilPubKeyProtoMsg {
+  typeUrl: "/abstractaccount.v1.NilPubKey";
+  value: Uint8Array;
+}
+export interface NilPubKeyAmino {
+  address_bytes: Uint8Array;
+}
+export interface NilPubKeyAminoMsg {
+  type: "/abstractaccount.v1.NilPubKey";
+  value: NilPubKeyAmino;
 }
 function createBaseAbstractAccount(): AbstractAccount {
   return {

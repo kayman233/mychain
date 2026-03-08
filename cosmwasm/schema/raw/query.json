@@ -3,7 +3,6 @@
   "title": "QueryMsg",
   "oneOf": [
     {
-      "description": "Query the pubkey associated with this account.",
       "type": "object",
       "required": [
         "pubkey"
@@ -69,7 +68,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Query data by key",
       "type": "object",
       "required": [
         "get_data"
@@ -91,7 +89,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Query all stored data",
       "type": "object",
       "required": [
         "get_all_data"
@@ -105,7 +102,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Query the secret",
       "type": "object",
       "required": [
         "get_secret"
@@ -119,7 +115,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Query a share by address",
       "type": "object",
       "required": [
         "get_share"
@@ -141,7 +136,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Query all shares",
       "type": "object",
       "required": [
         "get_all_shares"
@@ -155,7 +149,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Query the recover data by address",
       "type": "object",
       "required": [
         "get_recover_data"
@@ -177,7 +170,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Query all recover data",
       "type": "object",
       "required": [
         "get_all_recover_data"
@@ -185,6 +177,66 @@
       "properties": {
         "get_all_recover_data": {
           "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "o_auth_guardians_list"
+      ],
+      "properties": {
+        "o_auth_guardians_list": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "o_auth_votes"
+      ],
+      "properties": {
+        "o_auth_votes": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "o_auth_config_query"
+      ],
+      "properties": {
+        "o_auth_config_query": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_o_auth_share"
+      ],
+      "properties": {
+        "get_o_auth_share": {
+          "type": "object",
+          "required": [
+            "sub_hash"
+          ],
+          "properties": {
+            "sub_hash": {
+              "type": "string"
+            }
+          },
           "additionalProperties": false
         }
       },

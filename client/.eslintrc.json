@@ -22,7 +22,7 @@
     "ecmaFeatures": {
       "jsx": true
     },
-    "project": "./client/tsconfig.eslint.json"
+    "project": "./tsconfig.eslint.json"
   },
   "ignorePatterns": ["codegen/**/*", "node_modules/**/*", ".next/**/*", "out/**/*"]
 }

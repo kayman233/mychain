@@ -14,6 +14,25 @@
         "type": "string"
       }
     },
+    "oauth_config": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/OAuthConfig"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "oauth_guardians": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/definitions/OAuthGuardian"
+      }
+    },
     "pubkey": {
       "$ref": "#/definitions/Binary"
     },
@@ -28,6 +47,54 @@
     "Binary": {
       "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
       "type": "string"
+    },
+    "OAuthConfig": {
+      "type": "object",
+      "required": [
+        "expected_audience",
+        "google_issuer",
+        "max_clock_skew"
+      ],
+      "properties": {
+        "attestor_pubkey": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Binary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_audience": {
+          "type": "string"
+        },
+        "google_issuer": {
+          "type": "string"
+        },
+        "max_clock_skew": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false
+    },
+    "OAuthGuardian": {
+      "type": "object",
+      "required": [
+        "provider",
+        "sub_hash"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "sub_hash": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

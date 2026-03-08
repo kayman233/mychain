@@ -2,7 +2,14 @@ use cosmwasm_std::{Binary, StdResult, Storage, Order, Addr};
 
 use account_base::state::PUBKEY;
 
-use crate::{state::{GUARDIANS, THRESHOLD, VOTES, COUNTS, KEY_VALUE_STORE, DATA_SECRET, SHARES, RECOVER_DATA}, msg::{GuardiansListResp, VotesResponse, CountsResponse, KeyValueResponse}};
+use crate::{
+    state::{
+        GUARDIANS, THRESHOLD, VOTES, COUNTS, KEY_VALUE_STORE, DATA_SECRET,
+        SHARES, RECOVER_DATA, OAUTH_GUARDIANS, OAUTH_VOTES, OAUTH_CONFIG, OAUTH_SHARES,
+    },
+    msg::{GuardiansListResp, VotesResponse, CountsResponse, KeyValueResponse, OAuthVotesResponse},
+    types::{OAuthGuardian, OAuthConfig},
+};
 
 pub fn pubkey(store: &dyn Storage) -> StdResult<Binary> {
     PUBKEY.load(store)
@@ -89,4 +96,31 @@ pub fn get_all_recover_data(store: &dyn Storage) -> StdResult<Vec<(Addr, Binary)
     RECOVER_DATA
         .range(store, None, None, Order::Ascending)
         .collect()
+}
+
+// ---- OAuth queries ----
+
+pub fn oauth_guardians_list(store: &dyn Storage) -> StdResult<Vec<OAuthGuardian>> {
+    OAUTH_GUARDIANS.may_load(store).map(|opt| opt.unwrap_or_default())
+}
+
+pub fn oauth_votes(store: &dyn Storage) -> StdResult<Vec<OAuthVotesResponse>> {
+    OAUTH_VOTES
+        .range(store, None, None, Order::Ascending)
+        .map(|item| {
+            let (sub_hash, vote) = item?;
+            Ok(OAuthVotesResponse {
+                sub_hash,
+                vote: vote.to_string(),
+            })
+        })
+        .collect()
+}
+
+pub fn oauth_config(store: &dyn Storage) -> StdResult<OAuthConfig> {
+    OAUTH_CONFIG.load(store)
+}
+
+pub fn get_oauth_share(store: &dyn Storage, sub_hash: &str) -> StdResult<Binary> {
+    OAUTH_SHARES.load(store, sub_hash)
 }

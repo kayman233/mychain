@@ -5,6 +5,14 @@ Prerequisites:
 Go 1.19+
 nvm
 Docker
+Rust + wasm32 target (for compiling contracts from source)
+```
+
+### Install Rust toolchain (if not installed):
+```
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source "$HOME/.cargo/env"
+rustup target add wasm32-unknown-unknown
 ```
 
 Install to get an executable `mychaind` in `$USER/go/bin`

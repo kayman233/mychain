@@ -1,5 +1,6 @@
 import { useChain } from '@cosmos-kit/react';
 import { defaultChainName } from '../config';
+import { chain } from '../config/chain';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SocialRecoveryClient } from '../codegen/SocialRecovery.client';
 import {
@@ -8,6 +9,7 @@ import {
   ArrayOfKeyValueResponse,
   GuardiansListResp,
   ArrayOfBinary,
+  OAuthAttestationProof,
 } from '../codegen/SocialRecovery.types';
 import { AccountsState, StoredAccount } from './types';
 import axios from 'axios';
@@ -27,6 +29,35 @@ export const updateAccounts = (newAccount: StoredAccount) => {
   localStorage.setItem('accounts', JSON.stringify(storedAccounts));
   return storedAccounts;
 };
+
+type OAuthAttestationAction = 'recover' | 'revoke' | 'store_share';
+
+interface OAuthAttestationRequest {
+  idToken: string;
+  contract: string;
+  chainId: string;
+  action: OAuthAttestationAction;
+  newPubkey?: string;
+  value?: string;
+}
+
+async function requestOAuthAttestation(
+  payload: OAuthAttestationRequest
+): Promise<OAuthAttestationProof> {
+  const response = await fetch('/api/oauth-attest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorPayload = await response.json().catch(() => ({}));
+    const message = errorPayload?.error || 'Failed to get OAuth attestation';
+    throw new Error(message);
+  }
+
+  return response.json();
+}
 
 export function useAA(
   contractAddress: string | undefined,
@@ -418,6 +449,74 @@ export function useAA(
     [initClientByContractAddress, setTxHash]
   );
 
+  const handleRecoverWithOAuth = useCallback(
+    async (jwtToken: string, newPubkey: string) => {
+      const contract = accountsState.selectedAccount?.contractAddress;
+      if (!address || !contract) return;
+
+      setIsLoading(true);
+      try {
+        const client = await initClient();
+        if (!client) return;
+
+        const attestation = await requestOAuthAttestation({
+          idToken: jwtToken,
+          contract,
+          chainId: chain.chain_id,
+          action: 'recover',
+          newPubkey,
+        });
+
+        const result = await client.recoverWithOAuth(
+          { attestation, newPubkey },
+          { gas: '2000000', amount: [] }
+        );
+        await delay(3000);
+        setTxHash(result.transactionHash);
+        return result.transactionHash;
+      } catch (error) {
+        console.error('Error in handleRecoverWithOAuth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [accountsState.selectedAccount?.contractAddress, address, initClient, setTxHash]
+  );
+
+  const handleStoreOAuthShare = useCallback(
+    async (jwtToken: string, encryptedShare: string) => {
+      const contract = accountsState.selectedAccount?.contractAddress;
+      if (!address || !contract) return;
+
+      setIsLoading(true);
+      try {
+        const client = await initClient();
+        if (!client) return;
+
+        const attestation = await requestOAuthAttestation({
+          idToken: jwtToken,
+          contract,
+          chainId: chain.chain_id,
+          action: 'store_share',
+          value: encryptedShare,
+        });
+
+        const result = await client.storeOAuthShare(
+          { attestation, value: encryptedShare },
+          { gas: '2000000', amount: [] }
+        );
+        await delay(3000);
+        setTxHash(result.transactionHash);
+        return result.transactionHash;
+      } catch (error) {
+        console.error('Error in handleStoreOAuthShare:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [accountsState.selectedAccount?.contractAddress, address, initClient, setTxHash]
+  );
+
   const selectAccount = useCallback((account: StoredAccount) => {
     setAccountsState(prev => ({
       ...prev,
@@ -439,6 +538,9 @@ export function useAA(
     handleSetSecret,
     handleSetShare,
     handleSetRecovery,
+    handleRecoverWithOAuth,
+    handleStoreOAuthShare,
+    initClient,
     isLoading,
   };
 }

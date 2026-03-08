@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Array_of_OAuthGuardian",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/OAuthGuardian"
+  },
+  "definitions": {
+    "OAuthGuardian": {
+      "type": "object",
+      "required": [
+        "provider",
+        "sub_hash"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "sub_hash": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

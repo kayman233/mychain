@@ -67,6 +67,62 @@ mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"get_all_recover_data":{}}'
 mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"get_secret":{}}' --output json | jq
 ```
 
+### OAuth queries (if OAuth guardians were configured)
+```
+mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"o_auth_guardians_list":{}}' --output json | jq
+mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"o_auth_votes":{}}' --output json | jq
+mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"o_auth_config_query":{}}' --output json | jq
+mychaind q wasm contract-state smart $ACCOUNT_ADDR '{"get_o_auth_share":{"sub_hash":"<sha256_hex_of_google_sub>"}}' --output json | jq
+```
+
+### Generate account with OAuth guardian
+
+To create an account with both Cosmos guardians and an OAuth (Google) self-guardian:
+
+1. Get your Google `sub` claim (unique user ID) by logging into Google OAuth in the client UI
+2. Compute SHA-256 hash of the `sub` value (the client does this automatically via `computeSubHash()`)
+3. Get attestor pubkey (from client server):
+
+```
+curl -s http://localhost:3000/api/oauth-attestor-pubkey | jq
+```
+
+If you use remote signer mode (`OAUTH_ATTEST_SIGNER_URL`), set `OAUTH_ATTESTOR_PUBKEY` in client env first.
+
+4. Instantiate with OAuth config:
+
+```
+export SUB_HASH="<sha256_hex_of_your_google_sub>"
+export GOOGLE_CLIENT_ID="<your_google_cloud_client_id>"
+export OAUTH_ATTESTOR_PUBKEY="<base64_compressed_secp256k1_pubkey>"
+
+export INIT_MSG='{
+  "pubkey":"AuXpdpSX+8fH7lerOczty2EgGFd9MMoJADPcZ7pdaLir",
+  "guardians":["cosmos185fflsvwrz0cx46w6qada7mdy92m6kx4gqx0ny","cosmos1w3egyz0x8qs3c6sg8mx37y3fz4mu6zz0s5slpu"],
+  "threshold":2,
+  "oauth_guardians":[{"provider":"google","sub_hash":"'$SUB_HASH'"}],
+  "oauth_config":{
+    "google_issuer":"https://accounts.google.com",
+    "expected_audience":"'$GOOGLE_CLIENT_ID'",
+    "max_clock_skew":120,
+    "attestor_pubkey":"'$OAUTH_ATTESTOR_PUBKEY'"
+  }
+}'
+
+mychaind tx abstract-account register $CODE_ID "$INIT_MSG" \
+    --salt $SALT \
+    --funds $FUNDS \
+    --from $SIGNER \
+    --chain-id $CHAIN_ID \
+    --gas=auto \
+    --gas-adjustment 1.4 \
+    --keyring-backend test
+```
+
+OAuth guardian votes count toward the same threshold as Cosmos guardian votes.
+JWT is verified off-chain by `/api/oauth-attest`; only signed attestation goes on-chain.
+Legacy on-chain JWT/JWKS path is removed from contract interface.
+
 ### To run send tx use sign/main.go, for example:
 
 ```

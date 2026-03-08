@@ -6,7 +6,7 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { Binary, InstantiateMsg, ExecuteMsg, QueryMsg, ArrayOfCountsResponse, CountsResponse, ArrayOfKeyValueResponse, KeyValueResponse, ArrayOfBinary, Addr, GuardiansListResp, Uint64, ArrayOfVotesResponse, VotesResponse } from "./SocialRecovery.types";
+import { Binary, InstantiateMsg, ExecuteMsg, QueryMsg, ArrayOfCountsResponse, CountsResponse, ArrayOfKeyValueResponse, KeyValueResponse, ArrayOfBinary, Addr, GuardiansListResp, Uint64, ArrayOfVotesResponse, VotesResponse, OAuthGuardian, ArrayOfOAuthGuardian, ArrayOfOAuthVotesResponse, OAuthConfig, OAuthAttestationProof } from "./SocialRecovery.types";
 export interface SocialRecoveryReadOnlyInterface {
   contractAddress: string;
   pubkey: () => Promise<Binary>;
@@ -33,6 +33,10 @@ export interface SocialRecoveryReadOnlyInterface {
     address: string;
   }) => Promise<Binary>;
   getAllRecoverData: () => Promise<ArrayOfBinary>;
+  oAuthGuardiansList: () => Promise<ArrayOfOAuthGuardian>;
+  oAuthVotes: () => Promise<ArrayOfOAuthVotesResponse>;
+  oAuthConfigQuery: () => Promise<OAuthConfig>;
+  getOAuthShare: ({ subHash }: { subHash: string }) => Promise<Binary>;
 }
 export class SocialRecoveryQueryClient implements SocialRecoveryReadOnlyInterface {
   client: CosmWasmClient;
@@ -52,6 +56,10 @@ export class SocialRecoveryQueryClient implements SocialRecoveryReadOnlyInterfac
     this.getAllShares = this.getAllShares.bind(this);
     this.getRecoverData = this.getRecoverData.bind(this);
     this.getAllRecoverData = this.getAllRecoverData.bind(this);
+    this.oAuthGuardiansList = this.oAuthGuardiansList.bind(this);
+    this.oAuthVotes = this.oAuthVotes.bind(this);
+    this.oAuthConfigQuery = this.oAuthConfigQuery.bind(this);
+    this.getOAuthShare = this.getOAuthShare.bind(this);
   }
   pubkey = async (): Promise<Binary> => {
     return this.client.queryContractSmart(this.contractAddress, {
@@ -131,6 +139,28 @@ export class SocialRecoveryQueryClient implements SocialRecoveryReadOnlyInterfac
       get_all_recover_data: {}
     });
   };
+  oAuthGuardiansList = async (): Promise<ArrayOfOAuthGuardian> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      o_auth_guardians_list: {}
+    });
+  };
+  oAuthVotes = async (): Promise<ArrayOfOAuthVotesResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      o_auth_votes: {}
+    });
+  };
+  oAuthConfigQuery = async (): Promise<OAuthConfig> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      o_auth_config_query: {}
+    });
+  };
+  getOAuthShare = async ({ subHash }: { subHash: string }): Promise<Binary> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      get_o_auth_share: {
+        sub_hash: subHash
+      }
+    });
+  };
 }
 export interface SocialRecoveryInterface extends SocialRecoveryReadOnlyInterface {
   contractAddress: string;
@@ -176,6 +206,9 @@ export interface SocialRecoveryInterface extends SocialRecoveryReadOnlyInterface
     value: Binary;
   }, fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
   removeRecoverData: (fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
+  recoverWithOAuth: ({ attestation, newPubkey }: { attestation: OAuthAttestationProof; newPubkey: Binary }, fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
+  revokeOAuth: ({ attestation }: { attestation: OAuthAttestationProof }, fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
+  storeOAuthShare: ({ attestation, value }: { attestation: OAuthAttestationProof; value: Binary }, fee_?: number | StdFee | "auto", memo_?: string, funds_?: Coin[]) => Promise<ExecuteResult>;
 }
 export class SocialRecoveryClient extends SocialRecoveryQueryClient implements SocialRecoveryInterface {
   client: SigningCosmWasmClient;
@@ -197,6 +230,9 @@ export class SocialRecoveryClient extends SocialRecoveryQueryClient implements S
     this.removeShare = this.removeShare.bind(this);
     this.storeRecoverData = this.storeRecoverData.bind(this);
     this.removeRecoverData = this.removeRecoverData.bind(this);
+    this.recoverWithOAuth = this.recoverWithOAuth.bind(this);
+    this.revokeOAuth = this.revokeOAuth.bind(this);
+    this.storeOAuthShare = this.storeOAuthShare.bind(this);
   }
   updatePubkey = async ({
     newPubkey
@@ -296,6 +332,29 @@ export class SocialRecoveryClient extends SocialRecoveryQueryClient implements S
   removeRecoverData = async (fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
     return await this.client.execute(this.sender, this.contractAddress, {
       remove_recover_data: {}
+    }, fee_, memo_, funds_);
+  };
+  recoverWithOAuth = async ({ attestation, newPubkey }: { attestation: OAuthAttestationProof; newPubkey: Binary }, fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      recover_with_o_auth: {
+        attestation,
+        new_pubkey: newPubkey
+      }
+    }, fee_, memo_, funds_);
+  };
+  revokeOAuth = async ({ attestation }: { attestation: OAuthAttestationProof }, fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      revoke_o_auth: {
+        attestation
+      }
+    }, fee_, memo_, funds_);
+  };
+  storeOAuthShare = async ({ attestation, value }: { attestation: OAuthAttestationProof; value: Binary }, fee_: number | StdFee | "auto" = "auto", memo_?: string, funds_?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      store_o_auth_share: {
+        attestation,
+        value
+      }
     }, fee_, memo_, funds_);
   };
 }

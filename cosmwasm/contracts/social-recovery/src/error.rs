@@ -23,6 +23,27 @@ pub enum ContractError {
 
     #[error("didnt vote")]
     NoVoted,
+
+    #[error("OAuth is not configured for this account")]
+    OAuthNotConfigured,
+
+    #[error("sender is not an OAuth guardian")]
+    NotOAuthGuardian,
+
+    #[error("OAuth token was already used")]
+    OAuthTokenReplay,
+
+    #[error("threshold must be greater than zero")]
+    InvalidThreshold,
+
+    #[error("invalid OAuth attestation")]
+    InvalidOAuthAttestation,
+
+    #[error("OAuth attestation expired")]
+    OAuthAttestationExpired,
+
+    #[error("OAuth attestor key is not configured")]
+    OAuthAttestorNotConfigured,
 }
 
 pub type ContractResult<T> = Result<T, ContractError>;

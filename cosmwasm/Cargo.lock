@@ -817,6 +817,8 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
+ "hex",
+ "serde",
  "thiserror",
 ]
 

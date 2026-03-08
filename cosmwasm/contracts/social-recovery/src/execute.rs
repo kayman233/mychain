@@ -1,8 +1,18 @@
-use cosmwasm_std::{Addr, Binary, Response, Storage, Deps};
+use cosmwasm_std::{Addr, Api, Binary, Env, Response, Storage, Deps};
 
 use account_base::{state::PUBKEY, execute::sha256};
 
-use crate::{error::{ContractResult, ContractError}, state::{VOTES, GUARDIANS, COUNTS, THRESHOLD, KEY_VALUE_STORE, DATA_SECRET, SHARES, RECOVER_DATA}};
+use crate::{
+    error::{ContractResult, ContractError},
+    state::{
+        VOTES, GUARDIANS, COUNTS, THRESHOLD, KEY_VALUE_STORE, DATA_SECRET,
+        SHARES, RECOVER_DATA, OAUTH_GUARDIANS, OAUTH_CONFIG,
+        OAUTH_VOTES, OAUTH_SHARES, OAUTH_USED_ATTESTATIONS,
+    },
+    types::{
+        OAuthAttestation, OAuthAttestationAction, OAuthAttestationProof, OAuthGuardian,
+    },
+};
 
 pub fn before_tx(
     deps:      Deps,
@@ -13,7 +23,6 @@ pub fn before_tx(
     let tx_bytes_hash = sha256(tx_bytes);
     let pubkey = PUBKEY.load(deps.storage)?;
 
-    // skip the signature validation in simulation mode
     if !simulate {
         let Some(sig_bytes) = signature else {
             return Err(ContractError::SignatureNotFound);
@@ -33,8 +42,6 @@ pub fn after_tx() -> ContractResult<Response> {
         .add_attribute("method", "after_tx"))
 }
 
-// this function is not used in this base contract directly, but is used by
-// several other account contracts that extend base, so we put it here
 pub fn assert_self(sender: &Addr, contract: &Addr) -> ContractResult<()> {
     if sender != contract {
         return Err(ContractError::Unauthorized);
@@ -49,7 +56,6 @@ pub fn update_pubkey(
     contract:   &Addr,
     new_pubkey: &Binary,
 ) -> ContractResult<Response> {
-    // only the account itself can update its pubkey
     assert_self(sender, contract)?;
 
     PUBKEY.save(store, new_pubkey)?;
@@ -90,14 +96,19 @@ pub fn recover(
     if count >= threshold {
         COUNTS.clear(store);
         VOTES.clear(store);
+        OAUTH_VOTES.clear(store);
         PUBKEY.save(store, new_pubkey)?;
-        return Ok(Response::new());
+        return Ok(Response::new()
+            .add_attribute("method", "recover")
+            .add_attribute("threshold_reached", "true"));
     }
 
     COUNTS.save(store, &new_pubkey.to_string(), &count)?;
     VOTES.save(store, sender, new_pubkey)?;
 
-    Ok(Response::new())
+    Ok(Response::new()
+        .add_attribute("method", "recover")
+        .add_attribute("count", count.to_string()))
 }
 
 pub fn revoke(
@@ -149,7 +160,6 @@ pub fn store_data(
     key: &str,
     value: &Binary,
 ) -> ContractResult<Response> {
-    // only the account itself can store data
     assert_self(sender, contract)?;
 
     KEY_VALUE_STORE.save(store, key, value)?;
@@ -166,7 +176,6 @@ pub fn remove_data(
     contract: &Addr,
     key: &str,
 ) -> ContractResult<Response> {
-    // only the account itself can remove data
     assert_self(sender, contract)?;
 
     KEY_VALUE_STORE.remove(store, key);
@@ -182,7 +191,6 @@ pub fn store_secret(
     contract: &Addr,
     value: &Binary,
 ) -> ContractResult<Response> {
-    // only the account itself can store secrets
     assert_self(sender, contract)?;
 
     DATA_SECRET.save(store, value)?;
@@ -197,7 +205,6 @@ pub fn remove_secret(
     sender: &Addr,
     contract: &Addr,
 ) -> ContractResult<Response> {
-    // only the account itself can remove secrets
     assert_self(sender, contract)?;
 
     DATA_SECRET.remove(store);
@@ -252,4 +259,307 @@ pub fn remove_recover_data(
     Ok(Response::new()
         .add_attribute("method", "remove_recover_data")
         .add_attribute("sender", sender.to_string()))
+}
+
+// ---- OAuth functions ----
+
+fn is_google_guardian(guardians: &[OAuthGuardian], sub_hash: &str) -> bool {
+    guardians.iter().any(|guardian| {
+        guardian.sub_hash == sub_hash && guardian.provider.eq_ignore_ascii_case("google")
+    })
+}
+
+fn oauth_attestation_action_str(action: &OAuthAttestationAction) -> &'static str {
+    match action {
+        OAuthAttestationAction::Recover => "recover",
+        OAuthAttestationAction::Revoke => "revoke",
+        OAuthAttestationAction::StoreShare => "store_share",
+    }
+}
+
+fn oauth_attestation_signing_message(attestation: &OAuthAttestation) -> String {
+    let new_pubkey = attestation
+        .new_pubkey
+        .as_ref()
+        .map(Binary::to_base64)
+        .unwrap_or_else(|| "-".to_string());
+    let share_hash = attestation
+        .share_hash
+        .as_ref()
+        .cloned()
+        .unwrap_or_else(|| "-".to_string());
+
+    format!(
+        "oauth_attestation:v1:{}:{}:{}:{}:{}:{}:{}:{}:{}",
+        attestation.provider,
+        attestation.contract,
+        attestation.chain_id,
+        attestation.sub_hash,
+        oauth_attestation_action_str(&attestation.action),
+        new_pubkey,
+        share_hash,
+        attestation.nonce,
+        attestation.expires_at,
+    )
+}
+
+fn oauth_attestation_nonce_key(attestation: &OAuthAttestation) -> String {
+    format!("{}:{}", attestation.sub_hash, attestation.nonce)
+}
+
+fn is_hex_64(value: &str) -> bool {
+    value.len() == 64 && value.chars().all(|c| c.is_ascii_hexdigit())
+}
+
+struct VerifiedOAuthAttestation {
+    sub_hash: String,
+    nonce_key: String,
+}
+
+fn consume_oauth_attestation_nonce(
+    store: &mut dyn Storage,
+    nonce_key: &str,
+) -> ContractResult<()> {
+    if OAUTH_USED_ATTESTATIONS
+        .may_load(store, nonce_key)?
+        .unwrap_or(false)
+    {
+        return Err(ContractError::OAuthTokenReplay);
+    }
+
+    OAUTH_USED_ATTESTATIONS.save(store, nonce_key, &true)?;
+    Ok(())
+}
+
+fn verify_oauth_attestation(
+    api: &dyn Api,
+    store: &mut dyn Storage,
+    env: &Env,
+    proof: &OAuthAttestationProof,
+    expected_action: OAuthAttestationAction,
+    expected_new_pubkey: Option<&Binary>,
+    expected_share: Option<&Binary>,
+) -> ContractResult<VerifiedOAuthAttestation> {
+    let oauth_config = OAUTH_CONFIG
+        .load(store)
+        .map_err(|_| ContractError::OAuthNotConfigured)?;
+    let attestor_pubkey = oauth_config
+        .attestor_pubkey
+        .ok_or(ContractError::OAuthAttestorNotConfigured)?;
+
+    let attestation = &proof.attestation;
+
+    if !attestation.provider.eq_ignore_ascii_case("google") {
+        return Err(ContractError::InvalidOAuthAttestation);
+    }
+
+    if attestation.contract != env.contract.address.to_string() {
+        return Err(ContractError::InvalidOAuthAttestation);
+    }
+
+    if attestation.chain_id != env.block.chain_id {
+        return Err(ContractError::InvalidOAuthAttestation);
+    }
+
+    if attestation.action != expected_action {
+        return Err(ContractError::InvalidOAuthAttestation);
+    }
+
+    if !is_hex_64(&attestation.sub_hash) {
+        return Err(ContractError::InvalidOAuthAttestation);
+    }
+
+    if attestation.nonce.is_empty() {
+        return Err(ContractError::InvalidOAuthAttestation);
+    }
+
+    if env.block.time.seconds() > attestation.expires_at {
+        return Err(ContractError::OAuthAttestationExpired);
+    }
+
+    match expected_action {
+        OAuthAttestationAction::Recover => {
+            let Some(new_pubkey) = expected_new_pubkey else {
+                return Err(ContractError::InvalidOAuthAttestation);
+            };
+
+            if attestation.new_pubkey.as_ref() != Some(new_pubkey) || attestation.share_hash.is_some() {
+                return Err(ContractError::InvalidOAuthAttestation);
+            }
+        },
+        OAuthAttestationAction::Revoke => {
+            if attestation.new_pubkey.is_some() || attestation.share_hash.is_some() {
+                return Err(ContractError::InvalidOAuthAttestation);
+            }
+        },
+        OAuthAttestationAction::StoreShare => {
+            let Some(share_value) = expected_share else {
+                return Err(ContractError::InvalidOAuthAttestation);
+            };
+            let expected_share_hash = hex::encode(sha256(share_value));
+            if attestation.share_hash.as_deref() != Some(expected_share_hash.as_str())
+                || attestation.new_pubkey.is_some()
+            {
+                return Err(ContractError::InvalidOAuthAttestation);
+            }
+        },
+    }
+
+    let nonce_key = oauth_attestation_nonce_key(attestation);
+    if OAUTH_USED_ATTESTATIONS.may_load(store, &nonce_key)?.unwrap_or(false) {
+        return Err(ContractError::OAuthTokenReplay);
+    }
+
+    let signing_message = oauth_attestation_signing_message(attestation);
+    let signing_hash = sha256(&Binary::from(signing_message.into_bytes()));
+
+    if !api.secp256k1_verify(&signing_hash, &proof.signature, &attestor_pubkey)? {
+        return Err(ContractError::InvalidSignature);
+    }
+
+    Ok(VerifiedOAuthAttestation {
+        sub_hash: attestation.sub_hash.clone(),
+        nonce_key,
+    })
+}
+
+pub fn recover_with_oauth(
+    api: &dyn Api,
+    store: &mut dyn Storage,
+    env: &Env,
+    attestation: &OAuthAttestationProof,
+    new_pubkey: &Binary,
+) -> ContractResult<Response> {
+    let verified = verify_oauth_attestation(
+        api,
+        store,
+        env,
+        attestation,
+        OAuthAttestationAction::Recover,
+        Some(new_pubkey),
+        None,
+    )?;
+
+    let oauth_guardians = OAUTH_GUARDIANS
+        .load(store)
+        .map_err(|_| ContractError::OAuthNotConfigured)?;
+
+    if !is_google_guardian(&oauth_guardians, &verified.sub_hash) {
+        return Err(ContractError::NotOAuthGuardian);
+    }
+
+    if OAUTH_VOTES.may_load(store, &verified.sub_hash)?.is_some() {
+        return Err(ContractError::AlreadyVoted);
+    }
+
+    consume_oauth_attestation_nonce(store, &verified.nonce_key)?;
+
+    let pubkey_str = new_pubkey.to_string();
+    let mut count = COUNTS.may_load(store, &pubkey_str)?.unwrap_or(0);
+    count += 1;
+
+    let threshold = THRESHOLD.load(store)?;
+
+    if count >= threshold {
+        COUNTS.clear(store);
+        VOTES.clear(store);
+        OAUTH_VOTES.clear(store);
+        PUBKEY.save(store, new_pubkey)?;
+        return Ok(Response::new()
+            .add_attribute("method", "recover_with_oauth")
+            .add_attribute("threshold_reached", "true"));
+    }
+
+    COUNTS.save(store, &pubkey_str, &count)?;
+    OAUTH_VOTES.save(store, &verified.sub_hash, new_pubkey)?;
+
+    Ok(Response::new()
+        .add_attribute("method", "recover_with_oauth")
+        .add_attribute("sub_hash", &verified.sub_hash)
+        .add_attribute("count", count.to_string()))
+}
+
+pub fn revoke_oauth(
+    api: &dyn Api,
+    store: &mut dyn Storage,
+    env: &Env,
+    attestation: &OAuthAttestationProof,
+) -> ContractResult<Response> {
+    let verified = verify_oauth_attestation(
+        api,
+        store,
+        env,
+        attestation,
+        OAuthAttestationAction::Revoke,
+        None,
+        None,
+    )?;
+
+    let oauth_guardians = OAUTH_GUARDIANS
+        .load(store)
+        .map_err(|_| ContractError::OAuthNotConfigured)?;
+
+    if !is_google_guardian(&oauth_guardians, &verified.sub_hash) {
+        return Err(ContractError::NotOAuthGuardian);
+    }
+
+    let voted_pubkey = OAUTH_VOTES
+        .may_load(store, &verified.sub_hash)?
+        .ok_or(ContractError::NoVoted)?;
+
+    consume_oauth_attestation_nonce(store, &verified.nonce_key)?;
+
+    let pubkey_str = voted_pubkey.to_string();
+    let mut count = COUNTS.load(store, &pubkey_str)?;
+
+    if count == 0 {
+        return Err(ContractError::NoVoted);
+    }
+
+    count -= 1;
+
+    if count == 0 {
+        COUNTS.remove(store, &pubkey_str);
+    } else {
+        COUNTS.save(store, &pubkey_str, &count)?;
+    }
+    OAUTH_VOTES.remove(store, &verified.sub_hash);
+
+    Ok(Response::new()
+        .add_attribute("method", "revoke_oauth")
+        .add_attribute("sub_hash", &verified.sub_hash))
+}
+
+pub fn store_oauth_share(
+    api: &dyn Api,
+    store: &mut dyn Storage,
+    env: &Env,
+    attestation: &OAuthAttestationProof,
+    value: &Binary,
+) -> ContractResult<Response> {
+    let verified = verify_oauth_attestation(
+        api,
+        store,
+        env,
+        attestation,
+        OAuthAttestationAction::StoreShare,
+        None,
+        Some(value),
+    )?;
+
+    let oauth_guardians = OAUTH_GUARDIANS
+        .load(store)
+        .map_err(|_| ContractError::OAuthNotConfigured)?;
+
+    if !is_google_guardian(&oauth_guardians, &verified.sub_hash) {
+        return Err(ContractError::NotOAuthGuardian);
+    }
+
+    consume_oauth_attestation_nonce(store, &verified.nonce_key)?;
+
+    OAUTH_SHARES.save(store, &verified.sub_hash, value)?;
+
+    Ok(Response::new()
+        .add_attribute("method", "store_oauth_share")
+        .add_attribute("sub_hash", &verified.sub_hash))
 }

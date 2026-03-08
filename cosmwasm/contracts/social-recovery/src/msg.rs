@@ -1,18 +1,19 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Addr};
 
+use crate::types::{OAuthAttestationProof, OAuthConfig, OAuthGuardian};
+
 #[cw_serde]
 pub struct InstantiateMsg {
     pub pubkey: Binary,
     pub guardians: Vec<String>,
     pub threshold: u64,
+    pub oauth_guardians: Option<Vec<OAuthGuardian>>,
+    pub oauth_config: Option<OAuthConfig>,
 }
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    /// Change the pubkey associated with this account.
-    ///
-    /// Only callable by the account itself.
     UpdatePubkey {
         new_pubkey: Binary,
     },
@@ -20,12 +21,10 @@ pub enum ExecuteMsg {
         new_pubkey: Binary,
     },
     Revoke {},
-    /// Store data by key
     StoreData {
         key: String,
         value: Binary,
     },
-    /// Remove data by key
     RemoveData {
         key: String,
     },
@@ -35,6 +34,18 @@ pub enum ExecuteMsg {
     RemoveShare {},
     StoreRecoverData { value: Binary },
     RemoveRecoverData {},
+    // OAuth messages
+    RecoverWithOAuth {
+        attestation: OAuthAttestationProof,
+        new_pubkey: Binary,
+    },
+    RevokeOAuth {
+        attestation: OAuthAttestationProof,
+    },
+    StoreOAuthShare {
+        attestation: OAuthAttestationProof,
+        value: Binary,
+    },
 }
 
 #[cw_serde]
@@ -61,9 +72,14 @@ pub struct KeyValueResponse {
 }
 
 #[cw_serde]
+pub struct OAuthVotesResponse {
+    pub sub_hash: String,
+    pub vote: String,
+}
+
+#[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    /// Query the pubkey associated with this account.
     #[returns(Binary)]
     Pubkey {},
     #[returns(GuardiansListResp)]
@@ -74,25 +90,27 @@ pub enum QueryMsg {
     Votes {},
     #[returns(Vec<CountsResponse>)]
     Counts {},
-    /// Query data by key
     #[returns(KeyValueResponse)]
     GetData { key: String },
-    /// Query all stored data
     #[returns(Vec<KeyValueResponse>)]
     GetAllData {},
-    /// Query the secret
     #[returns(Binary)]
     GetSecret {},
-    /// Query a share by address
     #[returns(Binary)]
     GetShare { address: String },
-    /// Query all shares
     #[returns(Vec<Binary>)]
     GetAllShares {},
-    /// Query the recover data by address
     #[returns(Binary)]
     GetRecoverData { address: String },
-    /// Query all recover data
     #[returns(Vec<Binary>)]
     GetAllRecoverData {},
+    // OAuth queries
+    #[returns(Vec<OAuthGuardian>)]
+    OAuthGuardiansList {},
+    #[returns(Vec<OAuthVotesResponse>)]
+    OAuthVotes {},
+    #[returns(OAuthConfig)]
+    OAuthConfigQuery {},
+    #[returns(Binary)]
+    GetOAuthShare { sub_hash: String },
 }

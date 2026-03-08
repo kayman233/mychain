@@ -5,6 +5,7 @@ pub mod error;
 pub mod msg;
 pub mod query;
 pub mod state;
+pub mod types;
 
 pub const CONTRACT_NAME: &str = "social-recovery";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
