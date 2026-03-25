@@ -6,11 +6,11 @@ use crate::{
     error::{ContractResult, ContractError},
     state::{
         VOTES, GUARDIANS, COUNTS, THRESHOLD, KEY_VALUE_STORE, DATA_SECRET,
-        SHARES, RECOVER_DATA, OAUTH_GUARDIANS, OAUTH_CONFIG,
+        SHARES, RECOVER_DATA, OAUTH_GUARDIANS, OAUTH_GUARDIANS_ROOT, OAUTH_CONFIG,
         OAUTH_VOTES, OAUTH_SHARES, OAUTH_USED_ATTESTATIONS,
     },
     types::{
-        OAuthAttestation, OAuthAttestationAction, OAuthAttestationProof, OAuthGuardian,
+        MerkleProof, OAuthAttestation, OAuthAttestationAction, OAuthAttestationProof, OAuthConfig, OAuthGuardian,
     },
 };
 
@@ -261,6 +261,18 @@ pub fn remove_recover_data(
         .add_attribute("sender", sender.to_string()))
 }
 
+pub fn update_oauth_config(
+    store: &mut dyn Storage,
+    sender: &Addr,
+    contract: &Addr,
+    oauth_config: &OAuthConfig,
+) -> ContractResult<Response> {
+    assert_self(sender, contract)?;
+    OAUTH_CONFIG.save(store, oauth_config)?;
+    Ok(Response::new()
+        .add_attribute("method", "update_oauth_config"))
+}
+
 // ---- OAuth functions ----
 
 fn is_google_guardian(guardians: &[OAuthGuardian], sub_hash: &str) -> bool {
@@ -343,9 +355,6 @@ fn verify_oauth_attestation(
     let oauth_config = OAUTH_CONFIG
         .load(store)
         .map_err(|_| ContractError::OAuthNotConfigured)?;
-    let attestor_pubkey = oauth_config
-        .attestor_pubkey
-        .ok_or(ContractError::OAuthAttestorNotConfigured)?;
 
     let attestation = &proof.attestation;
 
@@ -410,11 +419,56 @@ fn verify_oauth_attestation(
         return Err(ContractError::OAuthTokenReplay);
     }
 
+    // Collect all signatures from the proof
+    let all_signatures: Vec<&Binary> = {
+        let mut sigs = Vec::new();
+        if let Some(ref sig) = proof.signature {
+            sigs.push(sig);
+        }
+        if let Some(ref multi_sigs) = proof.signatures {
+            for sig in multi_sigs {
+                sigs.push(sig);
+            }
+        }
+        sigs
+    };
+
+    if all_signatures.is_empty() {
+        return Err(ContractError::InvalidSignature);
+    }
+
+    // Determine attestor pubkeys and threshold
+    let (pubkeys, threshold) = if let Some(ref multi_keys) = oauth_config.attestor_pubkeys {
+        let thresh = oauth_config.attestor_threshold.unwrap_or(multi_keys.len() as u64);
+        (multi_keys.clone(), thresh)
+    } else if let Some(ref single_key) = oauth_config.attestor_pubkey {
+        (vec![single_key.clone()], 1u64)
+    } else {
+        return Err(ContractError::OAuthAttestorNotConfigured);
+    };
+
+    // Count valid signatures
     let signing_message = oauth_attestation_signing_message(attestation);
     let signing_hash = sha256(&Binary::from(signing_message.into_bytes()));
 
-    if !api.secp256k1_verify(&signing_hash, &proof.signature, &attestor_pubkey)? {
-        return Err(ContractError::InvalidSignature);
+    let mut valid_count = 0u64;
+    let mut used_keys: Vec<bool> = vec![false; pubkeys.len()];
+
+    for sig in &all_signatures {
+        for (i, pubkey) in pubkeys.iter().enumerate() {
+            if used_keys[i] {
+                continue; // each key can only be used once
+            }
+            if api.secp256k1_verify(&signing_hash, sig, pubkey)? {
+                valid_count += 1;
+                used_keys[i] = true;
+                break;
+            }
+        }
+    }
+
+    if valid_count < threshold {
+        return Err(ContractError::InsufficientAttestorSignatures);
     }
 
     Ok(VerifiedOAuthAttestation {
@@ -423,12 +477,71 @@ fn verify_oauth_attestation(
     })
 }
 
+fn verify_merkle_proof(root: &str, proof: &MerkleProof) -> ContractResult<()> {
+    if proof.siblings.len() != proof.path_indices.len() {
+        return Err(ContractError::InvalidMerkleProof);
+    }
+
+    // The leaf is the sub_hash hex string; hash it to get the leaf node
+    let mut current = sha256(&Binary::from(proof.leaf.as_bytes().to_vec()));
+
+    for (sibling_hex, is_right) in proof.siblings.iter().zip(proof.path_indices.iter()) {
+        let sibling = hex::decode(sibling_hex)
+            .map_err(|_| ContractError::InvalidMerkleProof)?;
+
+        // If is_right, current is on the left side; else current is on the right
+        let combined = if *is_right {
+            [current.as_slice(), sibling.as_slice()].concat()
+        } else {
+            [sibling.as_slice(), current.as_slice()].concat()
+        };
+
+        current = sha256(&Binary::from(combined));
+    }
+
+    let computed_root = hex::encode(&current);
+    if computed_root != root {
+        return Err(ContractError::InvalidMerkleProof);
+    }
+
+    Ok(())
+}
+
+fn verify_oauth_guardian_membership(
+    store: &dyn Storage,
+    sub_hash: &str,
+    _provider: &str,
+    merkle_proof: Option<&MerkleProof>,
+) -> ContractResult<()> {
+    // Try Merkle proof first
+    if let Some(proof) = merkle_proof {
+        if let Ok(root) = OAUTH_GUARDIANS_ROOT.load(store) {
+            if proof.leaf != sub_hash {
+                return Err(ContractError::InvalidMerkleProof);
+            }
+            return verify_merkle_proof(&root, proof);
+        }
+    }
+
+    // Fallback to list-based check
+    let oauth_guardians = OAUTH_GUARDIANS
+        .load(store)
+        .map_err(|_| ContractError::OAuthNotConfigured)?;
+
+    if !is_google_guardian(&oauth_guardians, sub_hash) {
+        return Err(ContractError::NotOAuthGuardian);
+    }
+
+    Ok(())
+}
+
 pub fn recover_with_oauth(
     api: &dyn Api,
     store: &mut dyn Storage,
     env: &Env,
     attestation: &OAuthAttestationProof,
     new_pubkey: &Binary,
+    merkle_proof: Option<&MerkleProof>,
 ) -> ContractResult<Response> {
     let verified = verify_oauth_attestation(
         api,
@@ -440,13 +553,7 @@ pub fn recover_with_oauth(
         None,
     )?;
 
-    let oauth_guardians = OAUTH_GUARDIANS
-        .load(store)
-        .map_err(|_| ContractError::OAuthNotConfigured)?;
-
-    if !is_google_guardian(&oauth_guardians, &verified.sub_hash) {
-        return Err(ContractError::NotOAuthGuardian);
-    }
+    verify_oauth_guardian_membership(store, &verified.sub_hash, &attestation.attestation.provider, merkle_proof)?;
 
     if OAUTH_VOTES.may_load(store, &verified.sub_hash)?.is_some() {
         return Err(ContractError::AlreadyVoted);
@@ -484,6 +591,7 @@ pub fn revoke_oauth(
     store: &mut dyn Storage,
     env: &Env,
     attestation: &OAuthAttestationProof,
+    merkle_proof: Option<&MerkleProof>,
 ) -> ContractResult<Response> {
     let verified = verify_oauth_attestation(
         api,
@@ -495,13 +603,7 @@ pub fn revoke_oauth(
         None,
     )?;
 
-    let oauth_guardians = OAUTH_GUARDIANS
-        .load(store)
-        .map_err(|_| ContractError::OAuthNotConfigured)?;
-
-    if !is_google_guardian(&oauth_guardians, &verified.sub_hash) {
-        return Err(ContractError::NotOAuthGuardian);
-    }
+    verify_oauth_guardian_membership(store, &verified.sub_hash, &attestation.attestation.provider, merkle_proof)?;
 
     let voted_pubkey = OAUTH_VOTES
         .may_load(store, &verified.sub_hash)?
@@ -536,6 +638,7 @@ pub fn store_oauth_share(
     env: &Env,
     attestation: &OAuthAttestationProof,
     value: &Binary,
+    merkle_proof: Option<&MerkleProof>,
 ) -> ContractResult<Response> {
     let verified = verify_oauth_attestation(
         api,
@@ -547,13 +650,7 @@ pub fn store_oauth_share(
         Some(value),
     )?;
 
-    let oauth_guardians = OAUTH_GUARDIANS
-        .load(store)
-        .map_err(|_| ContractError::OAuthNotConfigured)?;
-
-    if !is_google_guardian(&oauth_guardians, &verified.sub_hash) {
-        return Err(ContractError::NotOAuthGuardian);
-    }
+    verify_oauth_guardian_membership(store, &verified.sub_hash, &attestation.attestation.provider, merkle_proof)?;
 
     consume_oauth_attestation_nonce(store, &verified.nonce_key)?;
 

@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Addr};
 
-use crate::types::{OAuthAttestationProof, OAuthConfig, OAuthGuardian};
+use crate::types::{MerkleProof, OAuthAttestationProof, OAuthConfig, OAuthGuardian};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -9,6 +9,7 @@ pub struct InstantiateMsg {
     pub guardians: Vec<String>,
     pub threshold: u64,
     pub oauth_guardians: Option<Vec<OAuthGuardian>>,
+    pub oauth_guardians_root: Option<String>,
     pub oauth_config: Option<OAuthConfig>,
 }
 
@@ -38,13 +39,19 @@ pub enum ExecuteMsg {
     RecoverWithOAuth {
         attestation: OAuthAttestationProof,
         new_pubkey: Binary,
+        merkle_proof: Option<MerkleProof>,
     },
     RevokeOAuth {
         attestation: OAuthAttestationProof,
+        merkle_proof: Option<MerkleProof>,
     },
     StoreOAuthShare {
         attestation: OAuthAttestationProof,
         value: Binary,
+        merkle_proof: Option<MerkleProof>,
+    },
+    UpdateOAuthConfig {
+        oauth_config: OAuthConfig,
     },
 }
 
@@ -113,4 +120,6 @@ pub enum QueryMsg {
     OAuthConfigQuery {},
     #[returns(Binary)]
     GetOAuthShare { sub_hash: String },
+    #[returns(String)]
+    OAuthGuardiansRoot {},
 }

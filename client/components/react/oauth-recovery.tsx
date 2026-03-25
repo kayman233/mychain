@@ -16,6 +16,11 @@ import { SocialRecoveryClient } from '../../codegen/SocialRecovery.client';
 import { OAuthAttestationProof } from '../../codegen/SocialRecovery.types';
 import { delay } from '../../hooks/useAA';
 import { chain } from '../../config/chain';
+import {
+  requestOAuthAttestation,
+  getOAuthSalt,
+  MultiAttestorProof,
+} from '../../utils/oauth-attestation';
 
 interface OAuthRecoveryProps {
   client: SocialRecoveryClient | null;
@@ -23,33 +28,20 @@ interface OAuthRecoveryProps {
   setTxHash: (hash: string) => void;
 }
 
-type OAuthAttestationAction = 'recover' | 'revoke' | 'store_share';
-
-interface OAuthAttestationRequest {
-  idToken: string;
-  contract: string;
-  chainId: string;
-  action: OAuthAttestationAction;
-  newPubkey?: string;
-  value?: string;
-}
-
-async function requestOAuthAttestation(
-  payload: OAuthAttestationRequest
-): Promise<OAuthAttestationProof> {
-  const response = await fetch('/api/oauth-attest', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorPayload = await response.json().catch(() => ({}));
-    const message = errorPayload?.error || 'Failed to get OAuth attestation';
-    throw new Error(message);
+/**
+ * Convert a MultiAttestorProof to the shape expected by the codegen contract client.
+ */
+function toContractProof(proof: MultiAttestorProof): OAuthAttestationProof {
+  if (proof.signatures && proof.signatures.length > 0) {
+    return {
+      attestation: proof.attestation,
+      signatures: proof.signatures,
+    } as any;
   }
-
-  return response.json();
+  return {
+    attestation: proof.attestation,
+    signature: proof.signature!,
+  };
 }
 
 export function OAuthRecovery({ client, initClient, setTxHash }: OAuthRecoveryProps) {
@@ -72,15 +64,18 @@ export function OAuthRecovery({ client, initClient, setTxHash }: OAuthRecoveryPr
         return;
       }
 
+      const salt = getOAuthSalt(c.contractAddress);
+      const proof = await requestOAuthAttestation({
+        idToken,
+        contract: c.contractAddress,
+        chainId: chain.chain_id,
+        action: 'recover',
+        newPubkey,
+        salt,
+      });
       const result = await c.recoverWithOAuth(
         {
-          attestation: await requestOAuthAttestation({
-            idToken,
-            contract: c.contractAddress,
-            chainId: chain.chain_id,
-            action: 'recover',
-            newPubkey,
-          }),
+          attestation: toContractProof(proof),
           newPubkey,
         },
         { gas: '2000000', amount: [] }

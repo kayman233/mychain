@@ -14,6 +14,11 @@ import {
 import { AccountsState, StoredAccount } from './types';
 import axios from 'axios';
 import { defaultBackendEndpoint } from '../config';
+import {
+  requestOAuthAttestation,
+  getOAuthSalt,
+  MultiAttestorProof,
+} from '../utils/oauth-attestation';
 
 // to wait until the tx is in the block
 export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -30,33 +35,22 @@ export const updateAccounts = (newAccount: StoredAccount) => {
   return storedAccounts;
 };
 
-type OAuthAttestationAction = 'recover' | 'revoke' | 'store_share';
-
-interface OAuthAttestationRequest {
-  idToken: string;
-  contract: string;
-  chainId: string;
-  action: OAuthAttestationAction;
-  newPubkey?: string;
-  value?: string;
-}
-
-async function requestOAuthAttestation(
-  payload: OAuthAttestationRequest
-): Promise<OAuthAttestationProof> {
-  const response = await fetch('/api/oauth-attest', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorPayload = await response.json().catch(() => ({}));
-    const message = errorPayload?.error || 'Failed to get OAuth attestation';
-    throw new Error(message);
+/**
+ * Convert a MultiAttestorProof to the shape expected by the codegen contract client.
+ * Single-attestor proofs use `signature`, multi-attestor proofs use `signatures`.
+ * We cast to `any` because the codegen type only knows about `signature: Binary`.
+ */
+function toContractProof(proof: MultiAttestorProof): OAuthAttestationProof {
+  if (proof.signatures && proof.signatures.length > 0) {
+    return {
+      attestation: proof.attestation,
+      signatures: proof.signatures,
+    } as any;
   }
-
-  return response.json();
+  return {
+    attestation: proof.attestation,
+    signature: proof.signature!,
+  };
 }
 
 export function useAA(
@@ -459,16 +453,18 @@ export function useAA(
         const client = await initClient();
         if (!client) return;
 
-        const attestation = await requestOAuthAttestation({
+        const salt = getOAuthSalt(contract);
+        const proof = await requestOAuthAttestation({
           idToken: jwtToken,
           contract,
           chainId: chain.chain_id,
           action: 'recover',
           newPubkey,
+          salt,
         });
 
         const result = await client.recoverWithOAuth(
-          { attestation, newPubkey },
+          { attestation: toContractProof(proof), newPubkey },
           { gas: '2000000', amount: [] }
         );
         await delay(3000);
@@ -493,16 +489,25 @@ export function useAA(
         const client = await initClient();
         if (!client) return;
 
-        const attestation = await requestOAuthAttestation({
+        // Compute share_hash on the client so the attestor never sees the raw value
+        const shareBytes = Uint8Array.from(atob(encryptedShare), c => c.charCodeAt(0));
+        const hashBuffer = await crypto.subtle.digest('SHA-256', shareBytes);
+        const shareHash = Array.from(new Uint8Array(hashBuffer))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        const salt = getOAuthSalt(contract);
+        const proof = await requestOAuthAttestation({
           idToken: jwtToken,
           contract,
           chainId: chain.chain_id,
           action: 'store_share',
-          value: encryptedShare,
+          shareHash,
+          salt,
         });
 
         const result = await client.storeOAuthShare(
-          { attestation, value: encryptedShare },
+          { attestation: toContractProof(proof), value: encryptedShare },
           { gas: '2000000', amount: [] }
         );
         await delay(3000);

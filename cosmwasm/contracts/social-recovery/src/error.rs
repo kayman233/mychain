@@ -44,6 +44,12 @@ pub enum ContractError {
 
     #[error("OAuth attestor key is not configured")]
     OAuthAttestorNotConfigured,
+
+    #[error("invalid Merkle proof")]
+    InvalidMerkleProof,
+
+    #[error("insufficient attestor signatures")]
+    InsufficientAttestorSignatures,
 }
 
 pub type ContractResult<T> = Result<T, ContractError>;

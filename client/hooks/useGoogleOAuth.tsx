@@ -22,9 +22,10 @@ function decodeJwtPayload(token: string): GoogleJwtPayload {
   return JSON.parse(decoded);
 }
 
-export async function computeSubHash(sub: string): Promise<string> {
+export async function computeSubHash(sub: string, contract?: string, salt?: string): Promise<string> {
+  const input = contract && salt ? `${sub}:${contract}:${salt}` : sub;
   const encoder = new TextEncoder();
-  const data = encoder.encode(sub);
+  const data = encoder.encode(input);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');

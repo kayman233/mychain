@@ -18,3 +18,4 @@ pub const OAUTH_VOTES: Map<&str, Binary> = Map::new("oauth_votes");
 pub const OAUTH_SHARES: Map<&str, Binary> = Map::new("oauth_shares");
 pub const OAUTH_CONFIG: Item<OAuthConfig> = Item::new("oauth_config");
 pub const OAUTH_USED_ATTESTATIONS: Map<&str, bool> = Map::new("oauth_used_attestations");
+pub const OAUTH_GUARDIANS_ROOT: Item<String> = Item::new("oauth_guardians_root");

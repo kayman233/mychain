@@ -5,7 +5,7 @@ use account_base::state::PUBKEY;
 use crate::{
     state::{
         GUARDIANS, THRESHOLD, VOTES, COUNTS, KEY_VALUE_STORE, DATA_SECRET,
-        SHARES, RECOVER_DATA, OAUTH_GUARDIANS, OAUTH_VOTES, OAUTH_CONFIG, OAUTH_SHARES,
+        SHARES, RECOVER_DATA, OAUTH_GUARDIANS, OAUTH_GUARDIANS_ROOT, OAUTH_VOTES, OAUTH_CONFIG, OAUTH_SHARES,
     },
     msg::{GuardiansListResp, VotesResponse, CountsResponse, KeyValueResponse, OAuthVotesResponse},
     types::{OAuthGuardian, OAuthConfig},
@@ -123,4 +123,8 @@ pub fn oauth_config(store: &dyn Storage) -> StdResult<OAuthConfig> {
 
 pub fn get_oauth_share(store: &dyn Storage, sub_hash: &str) -> StdResult<Binary> {
     OAUTH_SHARES.load(store, sub_hash)
+}
+
+pub fn oauth_guardians_root(store: &dyn Storage) -> StdResult<String> {
+    OAUTH_GUARDIANS_ROOT.load(store)
 }

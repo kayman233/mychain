@@ -23,7 +23,14 @@ type OAuthAttestationRequest = {
   chainId?: string;
   action?: OAuthAttestationAction;
   newPubkey?: string;
-  value?: string;
+  shareHash?: string;
+  salt?: string;
+  /**
+   * When provided, the attestor operates in "co-sign" mode:
+   * it verifies the JWT but signs the provided attestation
+   * instead of creating a new one.
+   */
+  attestation?: OAuthAttestation;
 };
 
 type RemoteSignerRequest = {
@@ -208,17 +215,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           'Attestor signer is not configured; set OAUTH_ATTESTOR_PRIVKEY_HEX or OAUTH_ATTEST_SIGNER_URL',
       });
     }
-    if (!body.idToken || !body.contract || !body.chainId || !body.action) {
-      return res.status(400).json({ error: 'idToken, contract, chainId, action are required' });
+
+    if (!body.idToken) {
+      return res.status(400).json({ error: 'idToken is required' });
     }
 
-    if (body.action === 'recover' && !body.newPubkey) {
-      return res.status(400).json({ error: 'newPubkey is required for recover action' });
-    }
-    if (body.action === 'store_share' && !body.value) {
-      return res.status(400).json({ error: 'value is required for store_share action' });
-    }
-
+    // --- Verify the JWT (common to both normal and co-sign modes) ---
     const tokenInfo = await fetchTokenInfo(body.idToken);
     if (tokenInfo.error || tokenInfo.error_description) {
       return res.status(401).json({
@@ -242,11 +244,77 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Google token expired' });
     }
 
-    const subHash = sha256Hex(tokenInfo.sub);
-    const shareHash =
-      body.action === 'store_share' && body.value
-        ? sha256Hex(Buffer.from(body.value, 'base64'))
-        : null;
+    // --- Co-sign mode: sign an existing attestation from another attestor ---
+    if (body.attestation) {
+      const providedAttestation = body.attestation;
+
+      // Validate the provided attestation has not expired
+      if (providedAttestation.expires_at <= now) {
+        return res.status(400).json({ error: 'Provided attestation has expired' });
+      }
+
+      // Validate the provider matches (must be google)
+      if (providedAttestation.provider !== 'google') {
+        return res.status(400).json({ error: 'Provided attestation has unsupported provider' });
+      }
+
+      const signingMessage = attestationSigningMessage(providedAttestation);
+      const signingHash = createHash('sha256').update(signingMessage).digest();
+      let signatureBytes: Uint8Array;
+
+      if (remoteSignerUrl) {
+        signatureBytes = await signWithRemoteSigner(
+          remoteSignerUrl,
+          remoteSignerApiKey,
+          {
+            message_hash_hex: Buffer.from(signingHash).toString('hex'),
+            context: {
+              provider: providedAttestation.provider,
+              contract: providedAttestation.contract,
+              chain_id: providedAttestation.chain_id,
+              action: providedAttestation.action,
+              sub_hash: providedAttestation.sub_hash,
+              nonce: providedAttestation.nonce,
+              expires_at: providedAttestation.expires_at,
+            },
+          },
+          remoteSignerTimeoutMs
+        );
+      } else {
+        const privateKey = parsePrivateKeyHex(privateKeyHex as string);
+        const signature = await secp256k1.signAsync(signingHash, privateKey);
+        signatureBytes = signature.toCompactRawBytes();
+      }
+
+      return res.status(200).json({
+        signature: Buffer.from(signatureBytes).toString('base64'),
+      });
+    }
+
+    // --- Normal mode: create a new attestation and sign it ---
+    if (!body.contract || !body.chainId || !body.action) {
+      return res.status(400).json({ error: 'idToken, contract, chainId, action are required' });
+    }
+    if (!body.salt || typeof body.salt !== 'string' || body.salt.trim().length === 0) {
+      return res.status(400).json({ error: 'salt is required and must be a non-empty string' });
+    }
+
+    if (body.action === 'recover' && !body.newPubkey) {
+      return res.status(400).json({ error: 'newPubkey is required for recover action' });
+    }
+    if (body.action === 'store_share') {
+      if (!body.shareHash) {
+        return res.status(400).json({ error: 'shareHash is required for store_share action' });
+      }
+      if (!/^[0-9a-f]{64}$/.test(body.shareHash)) {
+        return res
+          .status(400)
+          .json({ error: 'shareHash must be a 64-character lowercase hex string' });
+      }
+    }
+
+    const subHash = sha256Hex(`${tokenInfo.sub}:${body.contract}:${body.salt}`);
+    const shareHash = body.action === 'store_share' ? body.shareHash! : null;
 
     const attestation: OAuthAttestation = {
       provider: 'google',

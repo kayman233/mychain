@@ -13,7 +13,7 @@ use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
     error::ContractError,
     CONTRACT_NAME, CONTRACT_VERSION,
-    state::{GUARDIANS, THRESHOLD, OAUTH_GUARDIANS, OAUTH_CONFIG},
+    state::{GUARDIANS, THRESHOLD, OAUTH_GUARDIANS, OAUTH_GUARDIANS_ROOT, OAUTH_CONFIG},
 };
 
 #[entry_point]
@@ -40,6 +40,10 @@ pub fn instantiate(
     // OAuth guardian setup
     if let Some(oauth_guardians) = msg.oauth_guardians {
         OAUTH_GUARDIANS.save(deps.storage, &oauth_guardians)?;
+    }
+
+    if let Some(root) = msg.oauth_guardians_root {
+        OAUTH_GUARDIANS_ROOT.save(deps.storage, &root)?;
     }
 
     if let Some(oauth_config) = msg.oauth_config {
@@ -89,26 +93,33 @@ pub fn execute(
         ExecuteMsg::RecoverWithOAuth {
             attestation,
             new_pubkey,
+            merkle_proof,
         } => execute::recover_with_oauth(
             deps.api,
             deps.storage,
             &env,
             &attestation,
             &new_pubkey,
+            merkle_proof.as_ref(),
         ),
-        ExecuteMsg::RevokeOAuth { attestation } => execute::revoke_oauth(
+        ExecuteMsg::RevokeOAuth { attestation, merkle_proof } => execute::revoke_oauth(
             deps.api,
             deps.storage,
             &env,
             &attestation,
+            merkle_proof.as_ref(),
         ),
-        ExecuteMsg::StoreOAuthShare { attestation, value } => execute::store_oauth_share(
+        ExecuteMsg::StoreOAuthShare { attestation, value, merkle_proof } => execute::store_oauth_share(
             deps.api,
             deps.storage,
             &env,
             &attestation,
             &value,
+            merkle_proof.as_ref(),
         ),
+        ExecuteMsg::UpdateOAuthConfig { oauth_config } => {
+            execute::update_oauth_config(deps.storage, &info.sender, &env.contract.address, &oauth_config)
+        },
     }
 }
 
@@ -132,5 +143,6 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::OAuthVotes {} => to_binary(&query::oauth_votes(deps.storage)?),
         QueryMsg::OAuthConfigQuery {} => to_binary(&query::oauth_config(deps.storage)?),
         QueryMsg::GetOAuthShare { sub_hash } => to_binary(&query::get_oauth_share(deps.storage, &sub_hash)?),
+        QueryMsg::OAuthGuardiansRoot {} => to_binary(&query::oauth_guardians_root(deps.storage)?),
     }
 }
